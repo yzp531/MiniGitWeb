@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a5b4fc"/>
+      <stop offset="100%" style="stop-color:#c4b5fd"/>
+    </linearGradient>
+  </defs>
+  <!-- 圆角背景 -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Git 分支图标 -->
+  <g transform="translate(32,32)" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round">
+    <!-- 主分支线 -->
+    <line x1="0" y1="-16" x2="0" y2="16"/>
+    <!-- 左分支 -->
+    <circle cx="-10" cy="-8" r="5" fill="white" stroke="none"/>
+    <path d="M0,-8 Q-5,-8 -5,-8" />
+    <!-- 右分支 -->
+    <circle cx="10" cy="6" r="5" fill="white" stroke="none"/>
+    <path d="M0,6 Q5,6 5,6" />
+    <!-- 连接线 -->
+    <line x1="0" y1="-8" x2="-5" y2="-8"/>
+    <line x1="0" y1="6" x2="5" y2="6"/>
+  </g>
+  <!-- 顶部闪电标记 -->
+  <path d="M36 8 L30 20 L36 20 L28 32" fill="none" stroke="url(#glow)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+</svg>

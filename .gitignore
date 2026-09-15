@@ -1,0 +1,29 @@
+# 敏感文件
+*.pem
+*.key
+*.env
+.env*
+
+# 服务器敏感数据
+server/tokens.json
+server/path-history.json
+
+# 日志文件
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器配置
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 依赖目录
+node_modules/
+
+# 构建输出
+dist/
+build/

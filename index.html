@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mini Git Web · 极速切换版</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC",sans-serif;
+  transition:background .3s,color .3s;overflow:hidden;
+}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+
+:root,[data-theme="dark"]{
+  --bg:#0f1117;--bg2:#1a1d27;--card:rgba(30,32,44,.85);--card-border:rgba(255,255,255,.08);
+  --text:#e4e4e7;--text2:#a1a1aa;--text3:#71717a;--text4:#52525b;--text5:#3f3f46;
+  --input-bg:rgba(255,255,255,.06);--input-border:rgba(255,255,255,.12);--input-focus:rgba(99,102,241,.6);
+  --section:rgba(30,32,44,.7);--section-border:rgba(255,255,255,.06);
+  --btn-hover:rgba(99,102,241,.12);--chip-bg:rgba(255,255,255,.06);--chip-border:rgba(255,255,255,.08);
+  --console-bg:#0a0a0a;--console-border:rgba(255,255,255,.06);--console-text:#4ade80;
+  --console-info:#60a5fa;--console-error:#f87171;--console-success:#4ade80;--console-warn:#fbbf24;--console-ts:#3f3f46;
+  --console-thumb:rgba(255,255,255,.08);--console-pre-bg:rgba(255,255,255,.04);
+  --btn-status-bg:rgba(99,102,241,.15);--btn-status-color:#a5b4fc;--btn-status-border:rgba(99,102,241,.3);
+  --btn-add-bg:rgba(34,197,94,.15);--btn-add-color:#86efac;--btn-add-border:rgba(34,197,94,.3);
+  --btn-pull-bg:rgba(59,130,246,.15);--btn-pull-color:#93c5fd;--btn-pull-border:rgba(59,130,246,.3);
+  --btn-push-bg:rgba(239,68,68,.15);--btn-push-color:#fca5a5;--btn-push-border:rgba(239,68,68,.3);
+  --btn-stash-bg:rgba(234,179,8,.15);--btn-stash-color:#fcd34d;--btn-stash-border:rgba(234,179,8,.3);
+  --btn-branch-bg:rgba(16,185,129,.25);--btn-branch-color:#34d399;--btn-branch-border:rgba(16,185,129,.6);
+  --branch-accent:#34d399;--branch-badge-bg:rgba(16,185,129,.3);--branch-switch:#4ade80;--branch-delete:#f87171;
+  --chip-active-bg:rgba(99,102,241,.3);--chip-active-border:rgba(99,102,241,.7);--chip-active-color:#e0e7ff;--chip-active-glow:rgba(99,102,241,.4);
+  --chip-bg:rgba(255,255,255,.04);--chip-border:rgba(255,255,255,.06);
+  --logout-bg:rgba(255,255,255,.05);--logout-border:rgba(255,255,255,.1);
+}
+[data-theme="light"]{
+  --bg:#f4f4f5;--bg2:#e4e4e7;--card:rgba(255,255,255,.92);--card-border:rgba(0,0,0,.08);
+  --text:#18181b;--text2:#52525b;--text3:#71717a;--text4:#a1a1aa;--text5:#d4d4d8;
+  --input-bg:rgba(0,0,0,.03);--input-border:rgba(0,0,0,.12);--input-focus:rgba(99,102,241,.6);
+  --section:rgba(255,255,255,.9);--section-border:rgba(0,0,0,.06);
+  --btn-hover:rgba(99,102,241,.08);--chip-bg:rgba(0,0,0,.04);--chip-border:rgba(0,0,0,.08);
+  --console-bg:#f5f5f5;--console-border:rgba(0,0,0,.1);--console-text:#16a34a;
+  --console-info:#2563eb;--console-error:#dc2626;--console-success:#16a34a;--console-warn:#d97706;--console-ts:#a1a1aa;
+  --console-thumb:rgba(0,0,0,.12);--console-pre-bg:rgba(0,0,0,.03);
+  --btn-status-bg:rgba(99,102,241,.12);--btn-status-color:#3730a3;--btn-status-border:rgba(99,102,241,.3);
+  --btn-add-bg:rgba(34,197,94,.12);--btn-add-color:#15803d;--btn-add-border:rgba(34,197,94,.3);
+  --btn-pull-bg:rgba(59,130,246,.12);--btn-pull-color:#1d4ed8;--btn-pull-border:rgba(59,130,246,.3);
+  --btn-push-bg:rgba(239,68,68,.12);--btn-push-color:#b91c1c;--btn-push-border:rgba(239,68,68,.3);
+  --btn-stash-bg:rgba(234,179,8,.12);--btn-stash-color:#b45309;--btn-stash-border:rgba(234,179,8,.3);
+  --btn-branch-bg:rgba(16,185,129,.15);--btn-branch-color:#047857;--btn-branch-border:rgba(16,185,129,.5);
+  --branch-accent:#047857;--branch-badge-bg:rgba(16,185,129,.18);--branch-switch:#15803d;--branch-delete:#b91c1c;
+  --chip-active-bg:rgba(99,102,241,.2);--chip-active-border:rgba(99,102,241,.6);--chip-active-color:#1e1b4b;--chip-active-glow:rgba(99,102,241,.2);
+  --chip-bg:rgba(0,0,0,.03);--chip-border:rgba(0,0,0,.06);
+  --logout-bg:rgba(0,0,0,.03);--logout-border:rgba(0,0,0,.1);
+}
+body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
+
+.view{display:none;width:100%;height:100%;position:absolute;inset:0}
+.view.active{display:flex}
+
+/* 登录页 */
+#loginView{align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,rgba(99,102,241,.08),transparent 60%),linear-gradient(135deg,var(--bg),var(--bg2))}
+.login-card{width:min(400px,90vw);padding:48px 40px;border-radius:16px;background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);box-shadow:0 24px 60px rgba(0,0,0,.2);text-align:center}
+.login-logo{font-size:2.4rem;margin-bottom:6px}
+.login-title{font-size:1.1rem;font-weight:600;margin-bottom:28px;letter-spacing:.02em}
+.login-field{margin-bottom:18px;text-align:left}
+.login-field label{display:block;font-size:.78rem;color:var(--text2);margin-bottom:6px;font-weight:500}
+.login-field input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text);font-size:.92rem;transition:border-color .2s,box-shadow .2s;outline:none}
+.login-field input:focus{border-color:var(--input-focus);box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+.login-field input::placeholder{color:var(--text4)}
+.login-btn{width:100%;padding:12px;margin-top:8px;border:none;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:.95rem;font-weight:600;transition:opacity .2s,transform .15s}
+.login-btn:hover{opacity:.9}.login-btn:active{transform:scale(.98)}.login-btn:disabled{opacity:.5;cursor:not-allowed}
+.login-error{margin-top:14px;font-size:.82rem;color:#f87171;min-height:1.2em}
+.login-footer{margin-top:24px;font-size:.72rem;color:var(--text4)}
+
+/* 主控台 */
+#consoleView{flex-direction:column}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--section-border);background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);flex-shrink:0}
+.top-bar-left{display:flex;align-items:center;gap:12px}
+.top-bar-logo{font-size:1.3rem}
+.top-bar-title{font-size:.92rem;font-weight:600}
+.top-bar-branch{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:.72rem;font-weight:500;background:rgba(99,102,241,.12);color:#a5b4fc}
+.top-bar-branch::before{content:"";width:7px;height:7px;border-radius:50%;background:#6366f1}
+.top-bar-right{display:flex;align-items:center;gap:8px}
+.theme-toggle{width:32px;height:32px;border-radius:8px;border:1px solid var(--logout-border);background:var(--logout-bg);color:var(--text2);font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-toggle:hover{background:var(--btn-hover);color:var(--text)}
+.logout-btn{padding:7px 16px;border-radius:8px;border:1px solid var(--logout-border);background:var(--logout-bg);color:var(--text2);font-size:.8rem;font-weight:500;transition:all .2s}
+.logout-btn:hover{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#fca5a5}
+
+.main-content{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+.main-content::-webkit-scrollbar{width:6px}
+.main-content::-webkit-scrollbar-track{background:transparent}
+.main-content::-webkit-scrollbar-thumb{background:var(--chip-border);border-radius:3px}
+
+.mount-section{background:var(--section);border:1px solid var(--section-border);border-radius:14px;padding:20px}
+.section-label{font-size:.78rem;color:var(--text3);font-weight:500;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;-webkit-user-select:none}
+.section-label::before{content:"▾";font-size:.65rem;transition:transform .2s}
+.section-label.collapsed::before{transform:rotate(-90deg)}
+.section-label.collapsed+.mount-row,.section-label.collapsed~.shortcuts-row,.section-label.collapsed~.shortcuts-empty{display:none}
+.section-label{margin-bottom:10px}
+.section-label.collapsed{margin-bottom:0}
+.mount-row{display:flex;gap:10px}
+.path-input{flex:1;padding:11px 14px;border-radius:10px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text);font-size:.88rem;outline:none;transition:border-color .2s,box-shadow .2s}
+.path-input:focus{border-color:var(--input-focus);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.path-input::placeholder{color:var(--text5)}
+.mount-btn{padding:0 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;font-size:.85rem;font-weight:600;white-space:nowrap;transition:opacity .2s}
+.mount-btn:hover{opacity:.88}.mount-btn:disabled{opacity:.4;cursor:not-allowed}
+.mount-btn.loading{position:relative;color:transparent}
+.mount-btn.loading::after{content:"";position:absolute;top:50%;left:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.shortcuts-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.shortcut-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--chip-bg);border:1px solid var(--chip-border);color:var(--text3);font-size:.78rem;font-weight:500;transition:all .2s;cursor:pointer}
+.shortcut-chip:hover{background:var(--btn-hover);border-color:rgba(99,102,241,.25);color:var(--text)}
+.shortcut-chip.active{background:var(--chip-active-bg);border-color:var(--chip-active-border);color:var(--chip-active-color);box-shadow:0 0 12px var(--chip-active-glow);font-weight:600}
+.shortcut-chip .chip-name{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shortcut-chip .chip-del{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--text3);background:var(--chip-bg);border:none;transition:all .15s;flex-shrink:0}
+.shortcut-chip .chip-del:hover{background:rgba(239,68,68,.2);color:#fca5a5}
+.shortcuts-empty{font-size:.78rem;color:var(--text5);margin-top:8px}
+
+.actions-row{display:flex;gap:10px;flex-wrap:wrap}
+.action-btn{flex:1;min-width:100px;padding:12px 0;border:none;border-radius:10px;font-size:.85rem;font-weight:600;transition:all .2s}
+.action-btn:disabled{opacity:.35;cursor:not-allowed}
+.action-btn.status-btn{background:var(--btn-status-bg);color:var(--btn-status-color);border:1px solid var(--btn-status-border)}
+.action-btn.status-btn:hover:not(:disabled){background:var(--btn-status-bg);filter:brightness(1.2)}
+.action-btn.add-btn{background:var(--btn-add-bg);color:var(--btn-add-color);border:1px solid var(--btn-add-border)}
+.action-btn.add-btn:hover:not(:disabled){background:var(--btn-add-bg);filter:brightness(1.2)}
+.action-btn.pull-btn{background:var(--btn-pull-bg);color:var(--btn-pull-color);border:1px solid var(--btn-pull-border)}
+.action-btn.pull-btn:hover:not(:disabled){background:var(--btn-pull-bg);filter:brightness(1.2)}
+.action-btn.push-btn{background:var(--btn-push-bg);color:var(--btn-push-color);border:1px solid var(--btn-push-border)}
+.action-btn.push-btn:hover:not(:disabled){background:var(--btn-push-bg);filter:brightness(1.2)}
+.action-btn.stash-btn{background:var(--btn-stash-bg);color:var(--btn-stash-color);border:1px solid var(--btn-stash-border)}
+.action-btn.stash-btn:hover:not(:disabled){background:var(--btn-stash-bg);filter:brightness(1.2)}
+.action-btn.branch-btn{background:var(--btn-branch-bg);color:var(--btn-branch-color);border:1px solid var(--btn-branch-border);font-weight:600}
+.action-btn.branch-btn:hover:not(:disabled){background:var(--btn-branch-bg);filter:brightness(1.15)}
+.action-btn.loading{position:relative;color:transparent}
+.action-btn.loading::after{content:"";position:absolute;top:50%;left:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border:2px solid rgba(255,255,255,.2);border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;color:#e4e4e7}
+
+/* 文件选择弹窗 */
+.modal-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
+.modal-mask.active{display:flex}
+.modal{background:var(--card);border:1px solid var(--card-border);border-radius:14px;width:min(500px,90vw);max-height:70vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--section-border);display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:.9rem;font-weight:600}
+.modal-close{width:28px;height:28px;border-radius:6px;border:none;background:transparent;color:var(--text3);font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.modal-close:hover{background:rgba(239,68,68,.15);color:#fca5a5}
+.modal-body{flex:1;overflow-y:auto;padding:16px 20px}
+.modal-body::-webkit-scrollbar{width:5px}
+.modal-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--section-border);display:flex;gap:8px;justify-content:flex-end}
+.modal-footer button{padding:8px 16px;border-radius:8px;border:1px solid var(--chip-border);background:var(--chip-bg);color:var(--text);font-size:.82rem;font-weight:500;transition:all .15s}
+.modal-footer button:hover{background:var(--btn-hover)}
+.modal-footer button.primary{background:linear-gradient(135deg,#6366f1,#7c3aed);border:none;color:#fff}
+.modal-footer button.primary:hover{opacity:.9}
+
+.file-group{margin-bottom:14px}
+.file-group-title{font-size:.72rem;color:var(--text3);font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:8px}
+.select-all,.invert-select{font-size:.68rem;color:var(--chip-active-color);cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500;opacity:.7;transition:opacity .15s}
+.select-all:hover,.invert-select:hover{opacity:1}
+.file-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .1s}
+.file-item:hover{background:var(--btn-hover)}
+.file-item input[type="checkbox"]{width:16px;height:16px;accent-color:#6366f1;cursor:pointer}
+.file-item label{font-size:.82rem;color:var(--text);cursor:pointer;flex:1;word-break:break-all}
+.file-item .file-status{font-size:.68rem;color:var(--text3);padding:2px 6px;border-radius:4px;background:var(--chip-bg)}
+
+/* Stash 弹窗 */
+.stash-input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text);font-size:.85rem;outline:none;margin-bottom:12px}
+.stash-input:focus{border-color:var(--input-focus)}
+.stash-list-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;background:var(--section);border:1px solid var(--section-border);margin-bottom:8px;font-size:.82rem}
+.stash-list-item .stash-name{color:var(--text);flex:1;word-break:break-all}
+.stash-list-item .stash-actions{display:flex;gap:6px}
+.stash-list-item button{padding:4px 10px;border-radius:6px;border:1px solid var(--chip-border);background:var(--chip-bg);color:var(--text2);font-size:.72rem;transition:all .15s}
+.stash-list-item button:hover{background:var(--btn-hover)}
+.stash-list-item button.pop-btn{color:#86efac;border-color:rgba(34,197,94,.3)}
+.stash-list-item button.drop-btn{color:#fca5a5;border-color:rgba(239,68,68,.3)}
+.stash-empty{text-align:center;color:var(--text5);font-size:.82rem;padding:20px 0}
+
+/* Branch 弹窗 */
+.branch-list-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;background:var(--section);border:1px solid var(--section-border);margin-bottom:8px;font-size:.82rem}
+.branch-list-item .branch-name{color:var(--text);flex:1;word-break:break-all}
+.branch-list-item .branch-name.current{color:var(--branch-accent);font-weight:700}
+.branch-list-item .branch-actions{display:flex;gap:6px}
+.branch-list-item button{padding:4px 10px;border-radius:6px;border:1px solid var(--chip-border);background:var(--chip-bg);color:var(--text2);font-size:.72rem;transition:all .15s}
+.branch-list-item button:hover{background:var(--btn-hover)}
+.branch-list-item button.switch-btn{color:var(--branch-switch);border-color:var(--btn-branch-border);font-weight:600}
+.branch-list-item button.delete-btn{color:var(--branch-delete);border-color:rgba(239,68,68,.5);font-weight:600}
+.branch-list-item .branch-current-badge{background:var(--branch-badge-bg);color:var(--branch-accent);padding:2px 6px;border-radius:4px;font-size:.68rem;font-weight:700;margin-left:6px}
+.branch-create-input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text);font-size:.85rem;outline:none;margin-bottom:8px}
+.branch-create-input:focus{border-color:var(--input-focus)}
+.branch-create-from{font-size:.78rem;color:var(--text2);margin-bottom:12px}
+.branch-create-from select{padding:8px 12px;border-radius:8px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text);font-size:.82rem;outline:none;width:100%;margin-top:4px}
+.branch-empty{text-align:center;color:var(--text3);font-size:.82rem;padding:20px 0}
+.branch-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--section);border:1px solid var(--section-border);border-radius:8px;margin-bottom:16px}
+.branch-header .branch-current{color:var(--branch-accent);font-weight:700;font-size:.85rem}
+.branch-header .branch-count{color:var(--text2);font-size:.78rem}
+
+.console-section{flex:1;min-height:200px;background:var(--console-bg);border:1px solid var(--console-border);border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+.console-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--section-border);background:var(--section)}
+.console-title{font-size:.75rem;color:var(--text4);font-weight:500;display:flex;align-items:center;gap:6px}
+.console-title::before{content:"";width:8px;height:8px;border-radius:50%;background:#22c55e}
+.console-actions{display:flex;gap:6px}
+.console-clear,.console-history-btn{padding:3px 10px;border-radius:6px;border:1px solid var(--chip-border);background:transparent;color:var(--text4);font-size:.7rem;transition:all .15s}
+.console-clear:hover,.console-history-btn:hover{color:var(--text2);border-color:var(--text3)}
+.console-output{flex:1;overflow-y:auto;padding:14px 16px;font-family:"JetBrains Mono","Fira Code","SF Mono",Consolas,monospace;font-size:.8rem;line-height:1.7;color:var(--console-text);white-space:pre-wrap;word-break:break-all}
+.console-output::-webkit-scrollbar{width:5px}
+.console-output::-webkit-scrollbar-track{background:transparent}
+.console-output::-webkit-scrollbar-thumb{background:var(--console-thumb);border-radius:3px}
+.console-line{margin-bottom:2px}
+.console-line.error{color:var(--console-error)}.console-line.info{color:var(--console-info)}
+.console-line.success{color:var(--console-success)}.console-line.warn{color:var(--console-warn)}
+.console-line .timestamp{color:var(--console-ts);margin-right:8px}
+
+.history-panel{display:none;flex:1;min-height:200px;background:var(--console-bg);border:1px solid var(--console-border);border-radius:14px;flex-direction:column;overflow:hidden}
+.history-panel.active{display:flex}
+.history-list{flex:1;overflow-y:auto;padding:12px 16px}
+.history-list::-webkit-scrollbar{width:5px}
+.history-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+.history-item{padding:10px 14px;margin-bottom:8px;border-radius:10px;background:var(--section);border:1px solid var(--section-border);font-size:.8rem;cursor:pointer;transition:all .15s}
+.history-item:hover{border-color:rgba(99,102,241,.3);background:var(--btn-hover)}
+.history-item .h-time{color:var(--text4);font-size:.7rem;margin-bottom:4px}
+.history-item .h-action{color:var(--text);font-weight:500}
+.history-item .h-path{color:var(--text3);font-size:.72rem;margin-top:2px;word-break:break-all}
+.history-empty{color:var(--text5);font-size:.78rem;text-align:center;padding:40px 0}
+
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);padding:10px 20px;border-radius:10px;font-size:.82rem;font-weight:500;z-index:999;transition:transform .3s cubic-bezier(.22,.61,.36,1);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+.toast.error{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+.toast.info{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:#93c5fd}
+
+@media(max-width:640px){
+  .login-card{padding:36px 24px}
+  .top-bar{padding:10px 14px;flex-wrap:wrap;gap:8px}
+  .top-bar-left{gap:8px}
+  .top-bar-title{font-size:.82rem}
+  .logout-btn{padding:6px 12px;font-size:.75rem}
+  .main-content{padding:14px;gap:14px}
+  .mount-section{padding:14px}
+  .mount-row{flex-direction:column;gap:8px}
+  .mount-btn{width:100%;padding:12px 0}
+  .actions-section-toggle{margin-bottom:10px}
+  .actions-section-toggle.collapsed{margin-bottom:0}
+  .actions-section-toggle.collapsed+.actions-row{display:none}
+  .actions-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .action-btn{min-width:auto;padding:14px 0;font-size:.82rem}
+  .console-output{font-size:.72rem;padding:10px 12px}
+  .shortcut-chip .chip-name{max-width:80px}
+  .top-bar-branch{font-size:.65rem;padding:3px 8px}
+}
+@media(max-width:380px){.actions-row{grid-template-columns:1fr}.login-card{padding:28px 18px}}
+
+[data-theme="light"] .action-btn.loading::after{border-top-color:#fff}
+
+/* 全屏模式 */
+.console-fullscreen{padding:3px 10px;border-radius:6px;border:1px solid var(--chip-border);background:transparent;color:var(--text4);font-size:.7rem;transition:all .15s}
+.console-fullscreen:hover{color:var(--text2);border-color:var(--text3)}
+
+.console-section.fullscreen{position:fixed;inset:0;z-index:200;background:var(--console-bg);border:none;border-radius:0;display:flex;flex-direction:column}
+.console-section.fullscreen .console-header{border-bottom:1px solid var(--section-border)}
+.console-section.fullscreen .console-output{flex:1;padding:20px;font-size:.85rem}
+
+/* 浮动操作栏 */
+.floating-actions{position:fixed;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:210}
+.floating-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--chip-border);background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.floating-btn:hover{transform:scale(1.1);box-shadow:0 6px 16px rgba(0,0,0,.3)}
+.floating-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.floating-btn.exit-fullscreen{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3);color:#fca5a5;font-size:.9rem}
+.floating-btn.exit-fullscreen:hover{background:rgba(239,68,68,.25)}
+
+@media(max-width:640px){
+  .floating-actions{right:10px;gap:6px}
+  .floating-btn{width:40px;height:40px;font-size:1rem}
+}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- 文件选择弹窗 -->
+<div class="modal-mask" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>➕ 选择要加入暂存区的文件</h3>
+      <button class="modal-close" id="addModalClose">✕</button>
+    </div>
+    <div class="modal-body" id="addModalBody"></div>
+    <div class="modal-footer">
+      <button id="addModalCancel">取消</button>
+      <button id="addModalUnstage" style="display:none">取消暂存</button>
+      <button class="primary" id="addModalConfirm">加入暂存区</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stash 弹窗 -->
+<div class="modal-mask" id="stashModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📦 Git Stash</h3>
+      <button class="modal-close" id="stashModalClose">✕</button>
+    </div>
+    <div class="modal-body" id="stashModalBody"></div>
+    <div class="modal-footer">
+      <button id="stashModalClose2">关闭</button>
+      <button class="primary" id="stashSaveBtn">保存 Stash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Push 弹窗 -->
+<div class="modal-mask" id="pushModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🚀 Git Push</h3>
+      <button class="modal-close" id="pushModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <input class="stash-input" id="pushCommitMsg" placeholder="Commit Message (留空使用默认)">
+      <div style="font-size:.75rem;color:var(--text4);margin-top:4px">有变更时自动 commit 并 push，无变更直接 push</div>
+    </div>
+    <div class="modal-footer">
+      <button id="pushModalCancel">取消</button>
+      <button class="primary" id="pushModalConfirm">确认推送</button>
+    </div>
+  </div>
+</div>
+
+<!-- Branch 弹窗 -->
+<div class="modal-mask" id="branchModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🌿 Git Branch</h3>
+      <button class="modal-close" id="branchModalClose">✕</button>
+    </div>
+    <div class="modal-body" id="branchModalBody"></div>
+    <div class="modal-footer">
+      <button id="branchModalClose2">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 登录页 ======== -->
+<div id="loginView" class="view active">
+  <div class="login-card">
+    <div class="login-logo">🔐</div>
+    <div class="login-title">Mini Git Web · 极速切换版</div>
+    <form id="loginForm" autocomplete="off">
+      <div class="login-field">
+        <label>用户名</label>
+        <input type="text" id="username" placeholder="请输入用户名" autofocus>
+      </div>
+      <div class="login-field">
+        <label>密码</label>
+        <input type="password" id="password" placeholder="请输入密码">
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">登 录</button>
+      <div class="login-error" id="loginError"></div>
+    </form>
+    <div class="login-footer">Web 访问安全登录 · 仅限授权用户</div>
+  </div>
+</div>
+
+<!-- ======== 主控台 ======== -->
+<div id="consoleView" class="view">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <span class="top-bar-logo">⚡</span>
+      <span class="top-bar-title">Mini Git Web</span>
+      <span class="top-bar-branch" id="branchBadge" style="display:none"></span>
+    </div>
+    <div class="top-bar-right">
+      <button class="theme-toggle" id="themeToggle" title="切换主题">🌙</button>
+      <button class="logout-btn" id="logoutBtn">🚪 退出</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="mount-section">
+      <div class="section-label" id="mountSectionToggle">📂 仓库目录</div>
+      <div class="mount-row">
+        <input type="text" class="path-input" id="pathInput" placeholder="输入 Git 仓库绝对路径" list="pathHistory" autocomplete="off">
+        <datalist id="pathHistory"></datalist>
+        <button class="mount-btn" id="mountBtn">🔌 挂载</button>
+      </div>
+      <div class="shortcuts-row" id="shortcutsRow"></div>
+      <div class="shortcuts-empty" id="shortcutsEmpty">暂无快捷路径</div>
+      
+      <div class="section-label actions-section-toggle" id="actionsSectionToggle">⚡ 操作</div>
+      <div class="actions-row">
+        <button class="action-btn status-btn" id="btnStatus" disabled>📋 Status</button>
+        <button class="action-btn add-btn" id="btnAdd" disabled>➕ Add</button>
+        <button class="action-btn push-btn" id="btnPush" disabled>🚀 Push</button>
+        <button class="action-btn pull-btn" id="btnPull" disabled>⬇️ Pull</button>
+        <button class="action-btn stash-btn" id="btnStash" disabled>📦 Stash</button>
+        <button class="action-btn branch-btn" id="btnBranch" disabled>🌿 Branch</button>
+      </div>
+    </div>
+
+    <div class="console-section" id="consoleSection">
+      <div class="console-header">
+        <span class="console-title" id="consoleTitle">控制台</span>
+        <div class="console-actions">
+          <button class="console-history-btn" id="historyBtn" title="操作历史">📜</button>
+          <button class="console-clear" id="consoleClear">清空</button>
+          <button class="console-fullscreen" id="consoleFullscreen" title="全屏">⛶</button>
+        </div>
+      </div>
+      <div class="console-output" id="consoleOutput"></div>
+    </div>
+
+    <div class="history-panel" id="historyPanel">
+      <div class="console-header">
+        <span class="console-title">📜 操作历史</span>
+        <div class="console-actions">
+          <button class="console-history-btn" id="historyBack" title="返回控制台">📋</button>
+          <button class="console-clear" id="historyClear">清空</button>
+        </div>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 浮动操作栏（全屏时显示） -->
+<div class="floating-actions" id="floatingActions" style="display:none">
+  <button class="floating-btn status-btn" id="floatingBtnStatus" disabled>📋</button>
+  <button class="floating-btn add-btn" id="floatingBtnAdd" disabled>➕</button>
+  <button class="floating-btn push-btn" id="floatingBtnPush" disabled>🚀</button>
+  <button class="floating-btn pull-btn" id="floatingBtnPull" disabled>⬇️</button>
+  <button class="floating-btn stash-btn" id="floatingBtnStash" disabled>📦</button>
+  <button class="floating-btn branch-btn" id="floatingBtnBranch" disabled>🌿</button>
+  <button class="floating-btn exit-fullscreen" id="exitFullscreen" title="退出全屏">✕</button>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var API_BASE = location.origin;
+  var TOKEN_KEY = "git_auth_token";
+  var CURRENT_PATH_KEY = "git_current_path";
+  var THEME_KEY = "git_theme";
+  var HISTORY_KEY = "git_op_history";
+
+  var $ = function(id){ return document.getElementById(id); };
+  var loginView=$("loginView"),consoleView=$("consoleView");
+  var loginForm=$("loginForm"),usernameInput=$("username"),passwordInput=$("password");
+  var loginBtn=$("loginBtn"),loginError=$("loginError");
+  var pathInput=$("pathInput"),mountBtn=$("mountBtn"),pathHistoryList=$("pathHistory");
+  var shortcutsRow=$("shortcutsRow"),shortcutsEmpty=$("shortcutsEmpty");
+  var branchBadge=$("branchBadge"),logoutBtn=$("logoutBtn");
+  var btnStatus=$("btnStatus"),btnAdd=$("btnAdd"),btnPull=$("btnPull"),btnPush=$("btnPush"),btnStash=$("btnStash"),btnBranch=$("btnBranch");
+  var consoleOutput=$("consoleOutput"),consoleClear=$("consoleClear");
+  var themeToggle=$("themeToggle");
+  var historyBtn=$("historyBtn"),historyPanel=$("historyPanel"),historyList=$("historyList");
+  var historyBack=$("historyBack"),historyClear=$("historyClear"),consoleSection=$("consoleSection");
+  var consoleTitle=$("consoleTitle");
+  var mountSectionToggle=$("mountSectionToggle"),actionsSectionToggle=$("actionsSectionToggle");
+  var toast=$("toast");
+
+  // 文件选择弹窗
+  var addModal=$("addModal"),addModalBody=$("addModalBody"),addModalClose=$("addModalClose"),addModalCancel=$("addModalCancel"),addModalConfirm=$("addModalConfirm"),addModalUnstage=$("addModalUnstage");
+  // Stash 弹窗
+  var stashModal=$("stashModal"),stashModalBody=$("stashModalBody"),stashModalClose=$("stashModalClose"),stashModalClose2=$("stashModalClose2"),stashSaveBtn=$("stashSaveBtn");
+  // Push 弹窗
+  var pushModal=$("pushModal"),pushModalClose=$("pushModalClose"),pushModalCancel=$("pushModalCancel"),pushModalConfirm=$("pushModalConfirm"),pushCommitMsg=$("pushCommitMsg");
+  // Branch 弹窗
+  var branchModal=$("branchModal"),branchModalBody=$("branchModalBody"),branchModalClose=$("branchModalClose"),branchModalClose2=$("branchModalClose2");
+  
+  // 全屏相关
+  var consoleFullscreen=$("consoleFullscreen"),floatingActions=$("floatingActions"),exitFullscreen=$("exitFullscreen");
+  var floatingBtnStatus=$("floatingBtnStatus"),floatingBtnAdd=$("floatingBtnAdd"),floatingBtnPush=$("floatingBtnPush"),floatingBtnPull=$("floatingBtnPull"),floatingBtnStash=$("floatingBtnStash"),floatingBtnBranch=$("floatingBtnBranch");
+  var isFullscreen=false;
+
+  var token=localStorage.getItem(TOKEN_KEY)||"";
+  var currentPath=localStorage.getItem(CURRENT_PATH_KEY)||"";
+  var actionLock=false;
+  var lastStatusFiles={modified:[],staged:[],untracked:[]};
+
+  // 主题
+  function getTheme(){return localStorage.getItem(THEME_KEY)||"dark";}
+  function setTheme(t){document.documentElement.setAttribute("data-theme",t);localStorage.setItem(THEME_KEY,t);themeToggle.textContent=t==="dark"?"☀️":"🌙";}
+  setTheme(getTheme());
+  themeToggle.addEventListener("click",function(){setTheme(getTheme()==="dark"?"light":"dark");});
+
+  // 历史
+  function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY))||[];}catch(e){return[];}}
+  function addHistory(action,path,result){
+    var list=getHistory();
+    list.unshift({time:new Date().toLocaleString("zh-CN"),action:action,path:path,result:result||""});
+    if(list.length>50)list=list.slice(0,50);
+    localStorage.setItem(HISTORY_KEY,JSON.stringify(list));
+  }
+  function renderHistory(){
+    var list=getHistory();historyList.innerHTML="";
+    if(!list.length){historyList.innerHTML='<div class="history-empty">暂无操作记录</div>';return;}
+    list.forEach(function(h){
+      var div=document.createElement("div");div.className="history-item";
+      div.innerHTML='<div class="h-time">'+escapeHtml(h.time)+'</div><div class="h-action">'+escapeHtml(h.action)+'</div><div class="h-path">'+escapeHtml(h.path)+'</div>';
+      div.addEventListener("click",function(){pathInput.value=h.path;historyPanel.classList.remove("active");consoleSection.style.display="";});
+      historyList.appendChild(div);
+    });
+  }
+  historyBtn.addEventListener("click",function(){renderHistory();consoleSection.style.display="none";historyPanel.classList.add("active");});
+  historyBack.addEventListener("click",function(){historyPanel.classList.remove("active");consoleSection.style.display="";});
+  historyClear.addEventListener("click",function(){localStorage.removeItem(HISTORY_KEY);renderHistory();showToast("历史已清空","info");});
+
+  // 折叠切换
+  mountSectionToggle.addEventListener("click",function(){mountSectionToggle.classList.toggle("collapsed");});
+  actionsSectionToggle.addEventListener("click",function(){actionsSectionToggle.classList.toggle("collapsed");});
+
+  // 全屏切换
+  function toggleFullscreen(){
+    isFullscreen=!isFullscreen;
+    if(isFullscreen){
+      consoleSection.classList.add("fullscreen");
+      floatingActions.style.display="flex";
+      syncFloatingButtons();
+    }else{
+      consoleSection.classList.remove("fullscreen");
+      floatingActions.style.display="none";
+    }
+  }
+  function syncFloatingButtons(){
+    floatingBtnStatus.disabled=btnStatus.disabled;
+    floatingBtnAdd.disabled=btnAdd.disabled;
+    floatingBtnPush.disabled=btnPush.disabled;
+    floatingBtnPull.disabled=btnPull.disabled;
+    floatingBtnStash.disabled=btnStash.disabled;
+    floatingBtnBranch.disabled=btnBranch.disabled;
+  }
+  consoleFullscreen.addEventListener("click",toggleFullscreen);
+  exitFullscreen.addEventListener("click",toggleFullscreen);
+
+  // 浮动按钮事件
+  floatingBtnStatus.addEventListener("click",function(){if(!btnStatus.disabled)btnStatus.click();});
+  floatingBtnAdd.addEventListener("click",function(){if(!btnAdd.disabled)btnAdd.click();});
+  floatingBtnPush.addEventListener("click",function(){if(!btnPush.disabled)btnPush.click();});
+  floatingBtnPull.addEventListener("click",function(){if(!btnPull.disabled)btnPull.click();});
+  floatingBtnStash.addEventListener("click",function(){if(!btnStash.disabled)btnStash.click();});
+  floatingBtnBranch.addEventListener("click",function(){if(!btnBranch.disabled)btnBranch.click();});
+
+  // 控制台标题显示当前路径
+  function updateConsoleTitle(){
+    if(currentPath)consoleTitle.textContent="控制台 · "+currentPath;
+    else consoleTitle.textContent="控制台";
+  }
+
+  // 工具
+  function showToast(msg,type,dur){type=type||"info";dur=dur||2500;toast.textContent=msg;toast.className="toast "+type+" show";clearTimeout(toast._t);toast._t=setTimeout(function(){toast.className="toast";},dur);}
+  function log(text,cls){
+    var line=document.createElement("div");line.className="console-line"+(cls?" "+cls:"");
+    var now=new Date();var ts=("0"+now.getHours()).slice(-2)+":"+("0"+now.getMinutes()).slice(-2)+":"+("0"+now.getSeconds()).slice(-2);
+    line.innerHTML='<span class="timestamp">['+ts+']</span>'+escapeHtml(text);consoleOutput.appendChild(line);consoleOutput.scrollTop=consoleOutput.scrollHeight;
+  }
+  function logRaw(html,cls){var line=document.createElement("div");line.className="console-line"+(cls?" "+cls:"");line.innerHTML=html;consoleOutput.appendChild(line);consoleOutput.scrollTop=consoleOutput.scrollHeight;}
+  function escapeHtml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function setLoading(btn,loading){if(loading){btn.disabled=true;btn.classList.add("loading");}else{btn.classList.remove("loading");btn.disabled=false;}}
+  function setAllActions(enabled){[btnStatus,btnAdd,btnPull,btnPush,btnStash,btnBranch].forEach(function(b){b.disabled=!enabled;});if(isFullscreen)syncFloatingButtons();}
+
+  // API
+  function apiRequest(method,path,body){
+    return new Promise(function(resolve,reject){
+      var xhr=new XMLHttpRequest();xhr.open(method,API_BASE+path,true);xhr.timeout=90000;
+      xhr.setRequestHeader("Content-Type","application/json");
+      if(token)xhr.setRequestHeader("Authorization","Bearer "+token);
+      xhr.onload=function(){try{var data=JSON.parse(xhr.responseText);if(xhr.status>=200&&xhr.status<300)resolve(data);else reject(new Error(data.message||"请求失败"));}catch(e){reject(new Error("响应解析失败"));}};
+      xhr.onerror=function(){reject(new Error("网络连接失败"));};xhr.ontimeout=function(){reject(new Error("请求超时"));};
+      xhr.send(body?JSON.stringify(body):null);
+    });
+  }
+
+  // 登录
+  loginForm.addEventListener("submit",function(e){
+    e.preventDefault();var user=usernameInput.value.trim(),pass=passwordInput.value;
+    if(!user||!pass){loginError.textContent="请输入用户名和密码";return;}
+    loginBtn.disabled=true;loginBtn.textContent="登录中...";loginError.textContent="";
+    apiRequest("POST","/api/auth/login",{username:user,password:pass})
+      .then(function(res){token=res.token||"";if(!token)throw new Error("未获取到 Token");localStorage.setItem(TOKEN_KEY,token);showConsoleView();})
+      .catch(function(err){loginError.textContent=err.message;})
+      .then(function(){loginBtn.disabled=false;loginBtn.textContent="登 录";});
+  });
+
+  function showConsoleView(){loginView.classList.remove("active");consoleView.classList.add("active");loadServerHistory();updateConsoleTitle();if(currentPath){pathInput.value=currentPath;setAllActions(true);log("已恢复: "+currentPath,"info");runGitStatus();}}
+  function showLoginView(){consoleView.classList.remove("active");loginView.classList.add("active");usernameInput.value="";passwordInput.value="";loginError.textContent="";usernameInput.focus();}
+
+  logoutBtn.addEventListener("click",function(){
+    token="";currentPath="";localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(CURRENT_PATH_KEY);
+    consoleOutput.innerHTML="";setAllActions(false);branchBadge.style.display="none";updateConsoleTitle();showLoginView();showToast("已退出","info");
+  });
+  // 便捷按钮
+  function extractName(p){var parts=p.replace(/\/+$/,"").split("/");return parts[parts.length-1]||p;}
+
+  function loadServerHistory(){
+    apiRequest("GET","/api/history")
+      .then(function(res){if(res.list){renderShortcuts(res.list);renderPathHistory(res.list);}})
+      .catch(function(){});
+  }
+  function saveServerPath(p){
+    apiRequest("POST","/api/history",{path:p})
+      .then(function(res){if(res.list){renderShortcuts(res.list);renderPathHistory(res.list);}})
+      .catch(function(){});
+  }
+  function removeServerPath(p){
+    apiRequest("DELETE","/api/history",{path:p})
+      .then(function(res){if(res.list){renderShortcuts(res.list);renderPathHistory(res.list);}})
+      .catch(function(){});
+  }
+  function renderPathHistory(list){
+    pathHistoryList.innerHTML="";
+    list.forEach(function(p){
+      var opt=document.createElement("option");opt.value=p;pathHistoryList.appendChild(opt);
+    });
+  }
+  function renderShortcuts(list){
+    shortcutsRow.innerHTML="";
+    if(!list||!list.length){shortcutsEmpty.style.display="block";return;}
+    shortcutsEmpty.style.display="none";
+    list.forEach(function(p){
+      var chip=document.createElement("span");chip.className="shortcut-chip"+(p===currentPath?" active":"");
+      chip.innerHTML='<span class="chip-name" title="'+escapeHtml(p)+'">📁 '+escapeHtml(extractName(p))+'</span>';
+      var del=document.createElement("button");del.className="chip-del";del.textContent="×";del.title="移除";
+      del.addEventListener("click",function(e){e.stopPropagation();removeServerPath(p);showToast("已移除","info");});
+      chip.appendChild(del);chip.addEventListener("click",function(){pathInput.value=p;mountPath(p);});shortcutsRow.appendChild(chip);
+    });
+  }
+
+  function addShortcut(p){saveServerPath(p);}
+  function removeShortcut(p){removeServerPath(p);}
+
+  // 挂载
+  mountBtn.addEventListener("click",function(){var p=pathInput.value.trim();if(!p){showToast("请输入路径","error");return;}mountPath(p);});
+  pathInput.addEventListener("keydown",function(e){if(e.key==="Enter")mountBtn.click();});
+  function mountPath(p){
+    if(actionLock)return;actionLock=true;setLoading(mountBtn,true);log("挂载: "+p,"info");
+    apiRequest("POST","/api/git/validate",{path:p})
+      .then(function(res){
+        currentPath=p;localStorage.setItem(CURRENT_PATH_KEY,p);
+        // 立即添加到输入框下拉列表
+        var opt=document.createElement("option");opt.value=p;pathHistoryList.appendChild(opt);
+        addShortcut(p);setAllActions(true);updateConsoleTitle();log("✅ 挂载成功: "+p,"success");showToast("挂载成功","success");addHistory("挂载仓库",p,"成功");return runGitStatus();
+      })
+      .catch(function(err){
+        var errorMsg=err.message||"未知错误";
+        var hint="";
+        if(errorMsg.includes("EACCES")||errorMsg.includes("Permission denied"))hint="提示: 权限不足，请检查路径访问权限";
+        else if(errorMsg.includes("ENOENT")||errorMsg.includes("No such file"))hint="提示: 路径不存在，请检查输入是否正确";
+        else if(errorMsg.includes("not a git repository"))hint="提示: 该路径不是有效的 Git 仓库";
+        else if(errorMsg.includes("network")||errorMsg.includes("timeout"))hint="提示: 网络连接异常，请稍后重试";
+        else hint="提示: 请确认路径正确且有访问权限";
+        
+        log("❌ 挂载失败: "+errorMsg,"error");
+        if(hint)log("💡 "+hint,"info");
+        showToast(errorMsg,"error");
+        addHistory("挂载失败",p,errorMsg);
+      })
+      .then(function(){actionLock=false;setLoading(mountBtn,false);});
+  }
+
+  // Git 操作
+  var ACTION_NAME={status:"查看状态",add:"加入暂存区",reset:"取消暂存",pull:"拉取代码",push:"推送代码",stash:"Stash 操作"};
+  function gitExec(action,extra){
+    if(!currentPath){showToast("请先挂载仓库","error");return Promise.resolve();}
+    if(actionLock)return Promise.resolve();actionLock=true;
+    var btnMap={status:btnStatus,add:btnAdd,pull:btnPull,push:btnPush,stash:btnStash,branch:btnBranch};
+    var btn=btnMap[action];if(btn)setLoading(btn,true);setAllActions(false);
+    var name=ACTION_NAME[action]||action;
+    var start=Date.now();
+
+    // 实时进度提示
+    var progress=document.createElement("div");
+    progress.className="console-line info";
+    progress.textContent="⏳ "+name+"中... (0s)";
+    consoleOutput.appendChild(progress);consoleOutput.scrollTop=consoleOutput.scrollHeight;
+    var timer=setInterval(function(){
+      var s=Math.floor((Date.now()-start)/1000);
+      progress.textContent="⏳ "+name+"中... ("+s+"s)"+(s>=10?"，网络较慢请稍候":"");
+      consoleOutput.scrollTop=consoleOutput.scrollHeight;
+    },1000);
+    function finish(){(function(){clearInterval(timer);if(progress.parentNode)progress.parentNode.removeChild(progress);})();}
+
+    var payload={path:currentPath};
+    if(extra)Object.assign(payload,extra);
+    return apiRequest("POST","/api/git/"+action,payload)
+      .then(function(res){
+        finish();
+        var output=res.output||res.message||"";
+        if(res.success===false){
+          log("❌ "+name+"失败: "+(res.message||"未知错误"),"error");
+          showToast(res.message||"操作失败","error");
+          if(output)logRaw('<pre style="margin:6px 0 0;white-space:pre-wrap;color:var(--text);font-size:.8rem;background:var(--console-pre-bg);padding:8px 10px;border-radius:6px">'+escapeHtml(String(output))+'</pre>');
+          if(res.branch){branchBadge.style.display="";branchBadge.textContent=res.branch;}
+          addHistory("git "+action,currentPath,"失败");return res;
+        }
+        if(action==="push"&&res.pushed)log("✅ "+(res.message||"Push 成功"),"success");
+        else log("✅ "+name+"完成","success");
+        if(output)logRaw('<pre style="margin:6px 0 0;white-space:pre-wrap;color:var(--text);font-size:.8rem;background:var(--console-pre-bg);padding:8px 10px;border-radius:6px">'+escapeHtml(String(output))+'</pre>');
+        if(res.branch){branchBadge.style.display="";branchBadge.textContent=res.branch;}
+        if(res.files)lastStatusFiles=res.files;
+        addHistory("git "+action,currentPath,"成功");return res;
+      })
+      .catch(function(err){finish();log("❌ "+name+"失败: "+err.message,"error");showToast(err.message,"error");addHistory("git "+action,currentPath,err.message);})
+      .then(function(){finish();actionLock=false;if(btn)setLoading(btn,false);setAllActions(true);});
+  }
+  function runGitStatus(){return gitExec("status");}
+
+  btnStatus.addEventListener("click",function(){gitExec("status");});
+  btnPull.addEventListener("click",function(){gitExec("pull");});
+  btnPush.addEventListener("click",function(){
+    if(!currentPath){showToast("请先挂载仓库","error");return;}
+    pushCommitMsg.value="";
+    pushModal.classList.add("active");
+    pushCommitMsg.focus();
+  });
+  pushModalClose.addEventListener("click",function(){pushModal.classList.remove("active");});
+  pushModalCancel.addEventListener("click",function(){pushModal.classList.remove("active");});
+  pushModal.addEventListener("click",function(e){if(e.target===pushModal)pushModal.classList.remove("active");});
+  pushModalConfirm.addEventListener("click",function(){
+    var msg=pushCommitMsg.value.trim();
+    pushModal.classList.remove("active");
+    gitExec("push",{message:msg||"Web Auto Commit"});
+  });
+
+  // Add - 文件选择
+  btnAdd.addEventListener("click",function(){
+    if(!currentPath){showToast("请先挂载仓库","error");return;}
+    // 先获取最新状态
+    apiRequest("POST","/api/git/status",{path:currentPath})
+      .then(function(res){
+        if(res.files)lastStatusFiles=res.files;
+        showAddModal();
+      })
+      .catch(function(err){showToast(err.message,"error");});
+  });
+
+  function showAddModal(){
+    var files=lastStatusFiles;
+    var html="";
+
+    // 已暂存的文件 - 可取消暂存
+    if(files.staged&&files.staged.length){
+      html+='<div class="file-group"><div class="file-group-title"><span class="select-all staged-select-all">全选</span> ✅ 已暂存 (选中后点「取消暂存」)</div>';
+      files.staged.forEach(function(f,i){
+        html+='<div class="file-item"><input type="checkbox" id="fs'+i+'" value="'+escapeHtml(f)+'" class="staged-cb"><label for="fs'+i+'">'+escapeHtml(f)+'</label><span class="file-status" style="background:rgba(34,197,94,.15);color:#86efac">S</span></div>';
+      });
+      html+="</div>";
+    }
+
+    // 已修改的文件
+    if(files.modified&&files.modified.length){
+      html+='<div class="file-group"><div class="file-group-title"><span class="select-all" data-group="modified">全选</span><span class="invert-select" data-group="modified">反选</span> 📝 已修改 (未暂存)</div>';
+      files.modified.forEach(function(f,i){
+        html+='<div class="file-item"><input type="checkbox" id="fm'+i+'" value="'+escapeHtml(f)+'"><label for="fm'+i+'">'+escapeHtml(f)+'</label><span class="file-status">M</span></div>';
+      });
+      html+="</div>";
+    }
+
+    // 未跟踪的文件
+    if(files.untracked&&files.untracked.length){
+      html+='<div class="file-group"><div class="file-group-title"><span class="select-all" data-group="untracked">全选</span><span class="invert-select" data-group="untracked">反选</span> 🆕 未跟踪</div>';
+      files.untracked.forEach(function(f,i){
+        html+='<div class="file-item"><input type="checkbox" id="fu'+i+'" value="'+escapeHtml(f)+'"><label for="fu'+i+'">'+escapeHtml(f)+'</label><span class="file-status">?</span></div>';
+      });
+      html+="</div>";
+    }
+
+    if(!html)html='<div class="stash-empty">没有可操作的文件</div>';
+    addModalBody.innerHTML=html;
+    addModal.classList.add("active");
+
+    // 显示/隐藏取消暂存按钮
+    addModalUnstage.style.display=(files.staged&&files.staged.length)?"":"none";
+
+    // 已暂存全选
+    var stagedSelectAll=addModalBody.querySelector(".staged-select-all");
+    if(stagedSelectAll){
+      stagedSelectAll.addEventListener("click",function(){
+        var cbs=addModalBody.querySelectorAll(".staged-cb");
+        var allChecked=true;
+        cbs.forEach(function(cb){if(!cb.checked)allChecked=false;});
+        cbs.forEach(function(cb){cb.checked=!allChecked;});
+        stagedSelectAll.textContent=allChecked?"全选":"取消全选";
+      });
+    }
+
+    // 全选/取消全选
+    addModalBody.querySelectorAll(".select-all").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var checkboxes=addModalBody.querySelectorAll("input[type=checkbox]");
+        var allChecked=true;
+        checkboxes.forEach(function(cb){if(!cb.checked)allChecked=false;});
+        checkboxes.forEach(function(cb){cb.checked=!allChecked;});
+        btn.textContent=allChecked?"全选":"取消全选";
+      });
+    });
+
+    // 反选
+    addModalBody.querySelectorAll(".invert-select").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var checkboxes=addModalBody.querySelectorAll("input[type=checkbox]");
+        checkboxes.forEach(function(cb){cb.checked=!cb.checked;});
+      });
+    });
+  }
+  addModalClose.addEventListener("click",function(){addModal.classList.remove("active");});
+  addModalCancel.addEventListener("click",function(){addModal.classList.remove("active");});
+  addModal.addEventListener("click",function(e){if(e.target===addModal)addModal.classList.remove("active");});
+  addModalConfirm.addEventListener("click",function(){
+    var checked=addModalBody.querySelectorAll("input[type=checkbox]:checked:not(.staged-cb)");
+    var files=[];checked.forEach(function(cb){files.push(cb.value);});
+    addModal.classList.remove("active");
+    if(!files.length){showToast("未选择文件","error");return;}
+    gitExec("add",{files:files}).then(runGitStatus);
+  });
+  addModalUnstage.addEventListener("click",function(){
+    var checked=addModalBody.querySelectorAll(".staged-cb:checked");
+    var files=[];checked.forEach(function(cb){files.push(cb.value);});
+    addModal.classList.remove("active");
+    if(!files.length){showToast("未选择文件","error");return;}
+    gitExec("reset",{files:files}).then(runGitStatus);
+  });
+
+  // Stash
+  btnStash.addEventListener("click",function(){
+    if(!currentPath){showToast("请先挂载仓库","error");return;}
+    apiRequest("POST","/api/git/stash",{path:currentPath,action:"list"})
+      .then(function(res){showStashModal(res.stashList||"");})
+      .catch(function(err){showToast(err.message,"error");});
+  });
+
+  function showStashModal(list){
+    var html='<input class="stash-input" id="stashMessage" placeholder="Stash 备注 (可选)">';
+    if(list){
+      var lines=list.split("\n").filter(Boolean);
+      if(lines.length){
+        lines.forEach(function(line,i){
+          html+='<div class="stash-list-item"><span class="stash-name">'+escapeHtml(line)+'</span><div class="stash-actions"><button class="pop-btn" data-idx="'+i+'">恢复</button><button class="drop-btn" data-idx="'+i+'">删除</button></div></div>';
+        });
+      } else {
+        html+='<div class="stash-empty">暂无 Stash 记录</div>';
+      }
+    } else {
+      html+='<div class="stash-empty">暂无 Stash 记录</div>';
+    }
+    stashModalBody.innerHTML=html;
+    stashModal.classList.add("active");
+
+    // 绑定事件
+    stashModalBody.querySelectorAll(".pop-btn").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var idx=btn.getAttribute("data-idx");
+        stashModal.classList.remove("active");
+        gitExec("stash",{action:"pop",index:idx}).then(runGitStatus);
+      });
+    });
+    stashModalBody.querySelectorAll(".drop-btn").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var idx=btn.getAttribute("data-idx");
+        stashModal.classList.remove("active");
+        gitExec("stash",{action:"drop",index:idx}).then(runGitStatus);
+      });
+    });
+  }
+
+  stashModalClose.addEventListener("click",function(){stashModal.classList.remove("active");});
+  stashModalClose2.addEventListener("click",function(){stashModal.classList.remove("active");});
+  stashModal.addEventListener("click",function(e){if(e.target===stashModal)stashModal.classList.remove("active");});
+  stashSaveBtn.addEventListener("click",function(){
+    var msg=$("stashMessage")?$("stashMessage").value.trim():"";
+    stashModal.classList.remove("active");
+    gitExec("stash",{action:"save",message:msg||"Web Stash"}).then(runGitStatus);
+  });
+
+  consoleClear.addEventListener("click",function(){consoleOutput.innerHTML="";});
+
+  // Branch
+  btnBranch.addEventListener("click",function(){
+    if(!currentPath){showToast("请先挂载仓库","error");return;}
+    apiRequest("POST","/api/git/branch",{path:currentPath,action:"list"})
+      .then(function(res){showBranchModal(res.branches||[],res.currentBranch||"");})
+      .catch(function(err){showToast(err.message,"error");});
+  });
+
+  function showBranchModal(branches,currentBranch){
+    var html='';
+    html+='<div class="branch-header"><span class="branch-count">共 '+branches.length+' 个分支</span><span class="branch-current">当前: '+(currentBranch||'未知')+'</span></div>';
+
+    if(branches.length){
+      branches.forEach(function(b){
+        var isCurrent=b.current;
+        html+='<div class="branch-list-item"><span class="branch-name'+(isCurrent?' current':'')+'">'+(isCurrent?'★ ':'')+escapeHtml(b.name)+'</span>'+(isCurrent?'<span class="branch-current-badge">当前</span>':'')+'<div class="branch-actions">'+(isCurrent?'':'<button class="switch-btn" data-name="'+escapeHtml(b.name)+'">切换</button>')+'<button class="delete-btn" data-name="'+escapeHtml(b.name)+'"'+(isCurrent?' disabled':'')+'>删除</button></div></div>';
+      });
+      html+='<div style="margin-top:16px"><input class="branch-create-input" id="branchCreateInput" placeholder="输入新分支名称"></div><div class="branch-create-from"><label style="font-size:.78rem;color:var(--text3)">基于分支</label><select id="branchCreateFrom"><option value="">当前分支</option>'+branches.map(function(b){return '<option value="'+escapeHtml(b.name)+'">'+escapeHtml(b.name)+'</option>';}).join('')+'</select></div><button class="action-btn branch-btn" id="branchCreateBtn" style="width:100%;margin-top:8px">创建分支</button>';
+    } else {
+      html+='<div class="branch-empty">暂无分支</div><div style="margin-top:16px"><input class="branch-create-input" id="branchCreateInput" placeholder="输入新分支名称"></div><button class="action-btn branch-btn" id="branchCreateBtn" style="width:100%;margin-top:8px">创建分支</button>';
+    }
+
+    branchModalBody.innerHTML=html;
+    branchModal.classList.add("active");
+
+    branchModalBody.querySelectorAll(".switch-btn").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var name=btn.getAttribute("data-name");
+        branchModal.classList.remove("active");
+        apiRequest("POST","/api/git/branch",{path:currentPath,action:"switch",name:name})
+          .then(function(res){showToast("已切换到 "+res.branch,"success");runGitStatus();})
+          .catch(function(err){showToast(err.message,"error");});
+      });
+    });
+
+    branchModalBody.querySelectorAll(".delete-btn").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var name=btn.getAttribute("data-name");
+        if(!confirm("确定删除分支 "+name+" 吗？"))return;
+        branchModal.classList.remove("active");
+        apiRequest("POST","/api/git/branch",{path:currentPath,action:"delete",name:name})
+          .then(function(res){showToast("分支 "+name+" 已删除","success");showBranchModal(branches,currentBranch);})
+          .catch(function(err){showToast(err.message,"error");});
+      });
+    });
+
+    var createBtn=branchModalBody.querySelector("#branchCreateBtn");
+    var createInput=branchModalBody.querySelector("#branchCreateInput");
+    var createFrom=branchModalBody.querySelector("#branchCreateFrom");
+    if(createBtn&&createInput){
+      createBtn.addEventListener("click",function(){
+        var name=createInput.value.trim();
+        if(!name){showToast("请输入分支名称","error");return;}
+        var from=createFrom?createFrom.value:"";
+        branchModal.classList.remove("active");
+        apiRequest("POST","/api/git/branch",{path:currentPath,action:"create",name:name,from:from})
+          .then(function(res){showToast(res.message,"success");runGitStatus();})
+          .catch(function(err){showToast(err.message,"error");});
+      });
+    }
+  }
+
+  branchModalClose.addEventListener("click",function(){branchModal.classList.remove("active");});
+  branchModalClose2.addEventListener("click",function(){branchModal.classList.remove("active");});
+  branchModal.addEventListener("click",function(e){if(e.target===branchModal)branchModal.classList.remove("active");});
+
+  // 初始化
+  if(token)showConsoleView();else usernameInput.focus();
+  loadServerHistory();
+  
+  // 移动端默认折叠仓库目录和操作按钮
+  if(window.innerWidth<=640){
+    mountSectionToggle.classList.add("collapsed");
+    actionsSectionToggle.classList.add("collapsed");
+  }
+})();
+</script>
+</body>
+</html>
