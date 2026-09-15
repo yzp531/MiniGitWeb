@@ -50,7 +50,8 @@ const server = http.createServer(async (req, res) => {
     if (res.writableEnded) return;
     const h = {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': req.headers.origin || '*',
+      'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Methods': 'POST,GET,OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type,Authorization'
     };
@@ -73,7 +74,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': req.headers.origin || '*',
+      'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Methods': 'POST,GET,OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type,Authorization'
     });

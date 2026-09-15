@@ -572,8 +572,16 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
       xhr.setRequestHeader("Content-Type","application/json");
       xhr.withCredentials=true; // 允许携带 Cookie
       xhr.onload=function(){
-        if(xhr.status===401){showLoginView();reject(new Error("登录已过期，请重新登录"));return;}
-        try{var data=JSON.parse(xhr.responseText);if(xhr.status>=200&&xhr.status<300)resolve(data);else reject(new Error(data.message||"请求失败"));}catch(e){reject(new Error("响应解析失败"));}
+        var data=null;
+        try{data=JSON.parse(xhr.responseText);}catch(e){}
+        if(xhr.status>=200&&xhr.status<300){resolve(data);return;}
+        // 认证接口的 401 由调用方处理，不触发跳转
+        if(xhr.status===401&&path.indexOf("/api/auth/")!==0){
+          showLoginView();
+          reject(new Error("登录已过期，请重新登录"));
+          return;
+        }
+        reject(new Error((data&&data.message)||"请求失败"));
       };
       xhr.onerror=function(){reject(new Error("网络连接失败"));};xhr.ontimeout=function(){reject(new Error("请求超时"));};
       xhr.send(body?JSON.stringify(body):null);
