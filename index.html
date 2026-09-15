@@ -739,6 +739,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     if(!currentPath){showToast("请先挂载仓库","error");return;}
     pushCommitMsg.value="";
     pushStatusHint.textContent="⏳ 检测中...";pushStatusHint.style.color="var(--hint-text)";
+    pushModalConfirm.disabled=true;
     pushModal.classList.add("active");
     pushCommitMsg.focus();
     apiRequest("POST","/api/git/status",{path:currentPath})
@@ -747,15 +748,16 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
         var ahead=res.ahead||0,hasUp=res.hasUpstream!==false;
         var dirty=(typeof res.dirty==="boolean")?res.dirty:!!(res.files&&((res.files.modified&&res.files.modified.length)||(res.files.staged&&res.files.staged.length)||(res.files.untracked&&res.files.untracked.length)));
         var msg,color;
-        if(!hasUp){msg="⚠️ 当前分支未设置远程上游，push 可能失败";color="var(--hint-warn)";}
+        if(!hasUp){msg="ℹ️ 当前分支无远程上游，push 时将自动创建并建立追踪";color="var(--hint-info)";}
         else if(ahead>0&&dirty){msg="⚠️ 本地有 "+ahead+" 个未推送提交，另有未提交改动";color="var(--hint-warn)";}
         else if(ahead>0){msg="⚠️ 本地有 "+ahead+" 个未推送提交";color="var(--hint-warn)";}
         else if(dirty){msg="📝 本地有未提交改动，将自动 commit 后推送";color="var(--hint-info)";}
         else{msg="✅ 本地没有未 push 的内容";color="var(--hint-ok)";}
         pushStatusHint.textContent=msg;pushStatusHint.style.color=color;
+        pushModalConfirm.disabled=(hasUp&&ahead===0&&!dirty);
       })
       .catch(function(){
-        if(pushModal.classList.contains("active")){pushStatusHint.textContent="⚠️ 检测失败，无法确认是否有未推送内容";pushStatusHint.style.color="var(--hint-warn)";}
+        if(pushModal.classList.contains("active")){pushStatusHint.textContent="⚠️ 检测失败，无法确认是否有未推送内容";pushStatusHint.style.color="var(--hint-warn)";pushModalConfirm.disabled=false;}
       });
   });
   pushModalClose.addEventListener("click",function(){pushModal.classList.remove("active");});
