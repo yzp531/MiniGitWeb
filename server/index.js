@@ -214,6 +214,15 @@ const server = http.createServer(async (req, res) => {
         const stagedFiles = await gitSafe(['diff', '--cached', '--name-only']);
         const untrackedFiles = await gitSafe(['ls-files', '--others', '--exclude-standard']);
 
+        const porcelain = await gitSafe(['status', '--porcelain']);
+        const upstream = await gitSafe(['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}']);
+        let ahead = 0, behind = 0;
+        if (upstream) {
+          const counts = await gitSafe(['rev-list', '--left-right', '--count', '@{u}...HEAD']);
+          const parts = counts.split(/\s+/).filter(Boolean);
+          if (parts.length === 2) { behind = parseInt(parts[0], 10) || 0; ahead = parseInt(parts[1], 10) || 0; }
+        }
+
         let output = '=== Branch: ' + branch + ' ===\n\n';
         output += '--- Status ---\n' + (status || '(clean)') + '\n\n';
         if (diffStat) output += '--- Unstaged Changes ---\n' + diffStat + '\n\n';
@@ -224,6 +233,7 @@ const server = http.createServer(async (req, res) => {
 
         return respond(200, {
           success: true, output, branch,
+          ahead, behind, dirty: !!porcelain, hasUpstream: !!upstream, upstream: upstream || '',
           files: {
             modified: modifiedFiles ? modifiedFiles.split('\n').filter(Boolean) : [],
             staged: stagedFiles ? stagedFiles.split('\n').filter(Boolean) : [],
