@@ -439,7 +439,6 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   "use strict";
 
   var API_BASE = location.origin;
-  var TOKEN_KEY = "git_auth_token";
   var CURRENT_PATH_KEY = "git_current_path";
   var THEME_KEY = "git_theme";
   var HISTORY_KEY = "git_op_history";
@@ -481,7 +480,6 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     removeItem:function(key){try{localStorage.removeItem(key);}catch(e){}}
   };
 
-  var token=safeStorage.getItem(TOKEN_KEY)||"";
   var currentPath=safeStorage.getItem(CURRENT_PATH_KEY)||"";
   var actionLock=false;
   var lastStatusFiles={modified:[],staged:[],untracked:[]};
@@ -572,8 +570,11 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     return new Promise(function(resolve,reject){
       var xhr=new XMLHttpRequest();xhr.open(method,API_BASE+path,true);xhr.timeout=90000;
       xhr.setRequestHeader("Content-Type","application/json");
-      if(token)xhr.setRequestHeader("Authorization","Bearer "+token);
-      xhr.onload=function(){try{var data=JSON.parse(xhr.responseText);if(xhr.status>=200&&xhr.status<300)resolve(data);else reject(new Error(data.message||"请求失败"));}catch(e){reject(new Error("响应解析失败"));}};
+      xhr.withCredentials=true; // 允许携带 Cookie
+      xhr.onload=function(){
+        if(xhr.status===401){showLoginView();reject(new Error("登录已过期，请重新登录"));return;}
+        try{var data=JSON.parse(xhr.responseText);if(xhr.status>=200&&xhr.status<300)resolve(data);else reject(new Error(data.message||"请求失败"));}catch(e){reject(new Error("响应解析失败"));}
+      };
       xhr.onerror=function(){reject(new Error("网络连接失败"));};xhr.ontimeout=function(){reject(new Error("请求超时"));};
       xhr.send(body?JSON.stringify(body):null);
     });
@@ -585,7 +586,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     if(!user||!pass){loginError.textContent="请输入用户名和密码";return;}
     loginBtn.disabled=true;loginBtn.textContent="登录中...";loginError.textContent="";
     apiRequest("POST","/api/auth/login",{username:user,password:pass})
-      .then(function(res){token=res.token||"";if(!token)throw new Error("未获取到 Token");safeStorage.setItem(TOKEN_KEY,token);showConsoleView();})
+      .then(function(res){if(!res.success)throw new Error(res.message||"登录失败");showConsoleView();})
       .catch(function(err){loginError.textContent=err.message;})
       .then(function(){loginBtn.disabled=false;loginBtn.textContent="登 录";});
   });
@@ -594,7 +595,8 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   function showLoginView(){consoleView.classList.remove("active");loginView.classList.add("active");usernameInput.value="";passwordInput.value="";loginError.textContent="";usernameInput.focus();}
 
   logoutBtn.addEventListener("click",function(){
-    token="";currentPath="";safeStorage.removeItem(TOKEN_KEY);safeStorage.removeItem(CURRENT_PATH_KEY);
+    apiRequest("POST","/api/auth/logout",{}).catch(function(){});
+    currentPath="";safeStorage.removeItem(CURRENT_PATH_KEY);
     consoleOutput.innerHTML="";setAllActions(false);branchBadge.style.display="none";updateConsoleTitle();showLoginView();showToast("已退出","info");
   });
   // 便捷按钮
@@ -939,9 +941,10 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   branchModalClose2.addEventListener("click",function(){branchModal.classList.remove("active");});
   branchModal.addEventListener("click",function(e){if(e.target===branchModal)branchModal.classList.remove("active");});
 
-  // 初始化
-  if(token)showConsoleView();else usernameInput.focus();
-  loadServerHistory();
+  // 初始化 - 通过调用后端验证登录状态
+  apiRequest("GET","/api/history")
+    .then(function(){showConsoleView();})
+    .catch(function(){usernameInput.focus();});
   
   // 移动端默认折叠仓库目录和操作按钮
   if(window.innerWidth<=640){

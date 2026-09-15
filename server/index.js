@@ -46,15 +46,29 @@ const MIME = {
 };
 
 const server = http.createServer(async (req, res) => {
-  const respond = (s, d) => {
+  const respond = (s, d, headers) => {
     if (res.writableEnded) return;
-    res.writeHead(s, {
+    const h = {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST,GET,OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type,Authorization'
-    });
+    };
+    if (headers) Object.assign(h, headers);
+    res.writeHead(s, h);
     res.end(JSON.stringify(d));
+  };
+
+  // 解析 Cookie
+  const parseCookies = (cookieHeader) => {
+    const cookies = {};
+    if (cookieHeader) {
+      cookieHeader.split(';').forEach(c => {
+        const [key, ...val] = c.split('=');
+        cookies[key.trim()] = decodeURIComponent(val.join('='));
+      });
+    }
+    return cookies;
   };
 
   if (req.method === 'OPTIONS') {
@@ -72,19 +86,31 @@ const server = http.createServer(async (req, res) => {
     let data = {};
     try { data = body ? JSON.parse(body) : {}; } catch(e) {}
 
-    const tok = (req.headers.authorization || '').replace('Bearer ', '');
+    // 优先从 Cookie 获取 token，其次从 Authorization header
+    const cookies = parseCookies(req.headers.cookie);
+    const tok = cookies.token || (req.headers.authorization || '').replace('Bearer ', '');
 
     if (req.url === '/api/auth/login' && req.method === 'POST') {
       if (data.username === 'admin' && data.password === 'admin@123') {
         const t = 'tok_' + Math.random().toString(36).slice(2);
         tokens.set(t, true);
         persistTokens();
-        return respond(200, { success: true, token: t, message: 'OK' });
+        // 设置 HttpOnly Cookie（7天过期）
+        return respond(200, { success: true, message: 'OK' }, {
+          'Set-Cookie': `token=${t}; HttpOnly; Path=/; Max-Age=${7*24*60*60}; SameSite=Strict`
+        });
       }
       return respond(401, { success: false, message: 'auth failed' });
     }
 
-    if (!tokens.has(tok)) return respond(401, { success: false, message: 'no auth' });
+    // 退出登录 - 清除 Cookie
+    if (req.url === '/api/auth/logout' && req.method === 'POST') {
+      return respond(200, { success: true, message: 'OK' }, {
+        'Set-Cookie': 'token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict'
+      });
+    }
+
+    if (!tok || !tokens.has(tok)) return respond(401, { success: false, message: 'no auth' });
 
     const dir = data.path ? path.resolve(data.path) : null;
 
