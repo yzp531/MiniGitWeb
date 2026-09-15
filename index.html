@@ -474,24 +474,31 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   var floatingBtnStatus=$("floatingBtnStatus"),floatingBtnAdd=$("floatingBtnAdd"),floatingBtnPush=$("floatingBtnPush"),floatingBtnPull=$("floatingBtnPull"),floatingBtnStash=$("floatingBtnStash"),floatingBtnBranch=$("floatingBtnBranch");
   var isFullscreen=false;
 
-  var token=localStorage.getItem(TOKEN_KEY)||"";
-  var currentPath=localStorage.getItem(CURRENT_PATH_KEY)||"";
+  // 安全的 localStorage 操作
+  var safeStorage={
+    getItem:function(key){try{return localStorage.getItem(key);}catch(e){return null;}},
+    setItem:function(key,value){try{localStorage.setItem(key,value);}catch(e){}},
+    removeItem:function(key){try{localStorage.removeItem(key);}catch(e){}}
+  };
+
+  var token=safeStorage.getItem(TOKEN_KEY)||"";
+  var currentPath=safeStorage.getItem(CURRENT_PATH_KEY)||"";
   var actionLock=false;
   var lastStatusFiles={modified:[],staged:[],untracked:[]};
 
   // 主题
-  function getTheme(){return localStorage.getItem(THEME_KEY)||"dark";}
-  function setTheme(t){document.documentElement.setAttribute("data-theme",t);localStorage.setItem(THEME_KEY,t);themeToggle.textContent=t==="dark"?"☀️":"🌙";}
+  function getTheme(){return safeStorage.getItem(THEME_KEY)||"dark";}
+  function setTheme(t){document.documentElement.setAttribute("data-theme",t);safeStorage.setItem(THEME_KEY,t);themeToggle.textContent=t==="dark"?"☀️":"🌙";}
   setTheme(getTheme());
   themeToggle.addEventListener("click",function(){setTheme(getTheme()==="dark"?"light":"dark");});
 
   // 历史
-  function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY))||[];}catch(e){return[];}}
+  function getHistory(){try{return JSON.parse(safeStorage.getItem(HISTORY_KEY))||[];}catch(e){return[];}}
   function addHistory(action,path,result){
     var list=getHistory();
     list.unshift({time:new Date().toLocaleString("zh-CN"),action:action,path:path,result:result||""});
     if(list.length>50)list=list.slice(0,50);
-    localStorage.setItem(HISTORY_KEY,JSON.stringify(list));
+    safeStorage.setItem(HISTORY_KEY,JSON.stringify(list));
   }
   function renderHistory(){
     var list=getHistory();historyList.innerHTML="";
@@ -505,7 +512,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   }
   historyBtn.addEventListener("click",function(){renderHistory();consoleSection.style.display="none";historyPanel.classList.add("active");});
   historyBack.addEventListener("click",function(){historyPanel.classList.remove("active");consoleSection.style.display="";});
-  historyClear.addEventListener("click",function(){localStorage.removeItem(HISTORY_KEY);renderHistory();showToast("历史已清空","info");});
+  historyClear.addEventListener("click",function(){safeStorage.removeItem(HISTORY_KEY);renderHistory();showToast("历史已清空","info");});
 
   // 折叠切换
   mountSectionToggle.addEventListener("click",function(){mountSectionToggle.classList.toggle("collapsed");});
@@ -578,7 +585,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     if(!user||!pass){loginError.textContent="请输入用户名和密码";return;}
     loginBtn.disabled=true;loginBtn.textContent="登录中...";loginError.textContent="";
     apiRequest("POST","/api/auth/login",{username:user,password:pass})
-      .then(function(res){token=res.token||"";if(!token)throw new Error("未获取到 Token");localStorage.setItem(TOKEN_KEY,token);showConsoleView();})
+      .then(function(res){token=res.token||"";if(!token)throw new Error("未获取到 Token");safeStorage.setItem(TOKEN_KEY,token);showConsoleView();})
       .catch(function(err){loginError.textContent=err.message;})
       .then(function(){loginBtn.disabled=false;loginBtn.textContent="登 录";});
   });
@@ -587,7 +594,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   function showLoginView(){consoleView.classList.remove("active");loginView.classList.add("active");usernameInput.value="";passwordInput.value="";loginError.textContent="";usernameInput.focus();}
 
   logoutBtn.addEventListener("click",function(){
-    token="";currentPath="";localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(CURRENT_PATH_KEY);
+    token="";currentPath="";safeStorage.removeItem(TOKEN_KEY);safeStorage.removeItem(CURRENT_PATH_KEY);
     consoleOutput.innerHTML="";setAllActions(false);branchBadge.style.display="none";updateConsoleTitle();showLoginView();showToast("已退出","info");
   });
   // 便捷按钮
@@ -631,7 +638,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     if(actionLock)return;actionLock=true;setLoading(mountBtn,true);log("挂载: "+p,"info");
     apiRequest("POST","/api/git/validate",{path:p})
       .then(function(res){
-        currentPath=p;localStorage.setItem(CURRENT_PATH_KEY,p);
+        currentPath=p;safeStorage.setItem(CURRENT_PATH_KEY,p);
         addShortcut(p);setAllActions(true);updateConsoleTitle();log("✅ 挂载成功: "+p,"success");showToast("挂载成功","success");addHistory("挂载仓库",p,"成功");return runGitStatus();
       })
       .catch(function(err){
