@@ -4,6 +4,7 @@
 
 - 所有回答以【Jerry:】开头
 - 使用中文简体回答问题
+- 如果 git push 弹窗为空，默认把最新修改记录（`git log -1 --pretty=%B`）作为 message 推送上去
 
 ## Project Overview
 
