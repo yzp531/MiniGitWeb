@@ -639,8 +639,6 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     apiRequest("POST","/api/git/validate",{path:p})
       .then(function(res){
         currentPath=p;localStorage.setItem(CURRENT_PATH_KEY,p);
-        // 立即添加到输入框下拉列表
-        var opt=document.createElement("option");opt.value=p;pathHistoryList.appendChild(opt);
         addShortcut(p);setAllActions(true);updateConsoleTitle();log("✅ 挂载成功: "+p,"success");showToast("挂载成功","success");addHistory("挂载仓库",p,"成功");return runGitStatus();
       })
       .catch(function(err){
