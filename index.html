@@ -18,6 +18,7 @@ input{font-family:inherit}
 :root,[data-theme="dark"]{
   --bg:#0f1117;--bg2:#1a1d27;--card:rgba(30,32,44,.85);--card-border:rgba(255,255,255,.08);
   --text:#e4e4e7;--text2:#a1a1aa;--text3:#71717a;--text4:#52525b;--text5:#3f3f46;
+  --hint-text:#a1a1aa;--hint-warn:#fca5a5;--hint-info:#fcd34d;--hint-ok:#86efac;
   --input-bg:rgba(255,255,255,.06);--input-border:rgba(255,255,255,.12);--input-focus:rgba(99,102,241,.6);
   --section:rgba(30,32,44,.7);--section-border:rgba(255,255,255,.06);
   --btn-hover:rgba(99,102,241,.12);--chip-bg:rgba(255,255,255,.06);--chip-border:rgba(255,255,255,.08);
@@ -38,6 +39,7 @@ input{font-family:inherit}
 [data-theme="light"]{
   --bg:#f4f4f5;--bg2:#e4e4e7;--card:rgba(255,255,255,.92);--card-border:rgba(0,0,0,.08);
   --text:#18181b;--text2:#52525b;--text3:#71717a;--text4:#a1a1aa;--text5:#d4d4d8;
+  --hint-text:#52525b;--hint-warn:#b91c1c;--hint-info:#b45309;--hint-ok:#15803d;
   --input-bg:rgba(0,0,0,.03);--input-border:rgba(0,0,0,.12);--input-focus:rgba(99,102,241,.6);
   --section:rgba(255,255,255,.9);--section-border:rgba(0,0,0,.06);
   --btn-hover:rgba(99,102,241,.08);--chip-bg:rgba(0,0,0,.04);--chip-border:rgba(0,0,0,.08);
@@ -139,7 +141,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
 .action-btn.loading::after{content:"";position:absolute;top:50%;left:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border:2px solid rgba(255,255,255,.2);border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;color:#e4e4e7}
 
 /* 文件选择弹窗 */
-.modal-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
+.modal-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center}
 .modal-mask.active{display:flex}
 .modal{background:var(--card);border:1px solid var(--card-border);border-radius:14px;width:min(500px,90vw);max-height:70vh;display:flex;flex-direction:column;overflow:hidden}
 .modal-header{padding:16px 20px;border-bottom:1px solid var(--section-border);display:flex;align-items:center;justify-content:space-between}
@@ -152,8 +154,12 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
 .modal-footer{padding:12px 20px;border-top:1px solid var(--section-border);display:flex;gap:8px;justify-content:flex-end}
 .modal-footer button{padding:8px 16px;border-radius:8px;border:1px solid var(--chip-border);background:var(--chip-bg);color:var(--text);font-size:.82rem;font-weight:500;transition:all .15s}
 .modal-footer button:hover{background:var(--btn-hover)}
+.modal-footer button:disabled{opacity:.4;cursor:not-allowed}
 .modal-footer button.primary{background:linear-gradient(135deg,#6366f1,#7c3aed);border:none;color:#fff}
 .modal-footer button.primary:hover{opacity:.9}
+.modal-footer button:disabled:hover,.modal-footer button.primary:disabled:hover{background:var(--chip-bg);opacity:.4}
+.modal-hint{font-size:.75rem;color:var(--hint-text);line-height:1.5}
+.stash-input::placeholder,.branch-create-input::placeholder{color:var(--hint-text)}
 
 .file-group{margin-bottom:14px}
 .file-group-title{font-size:.72rem;color:var(--text3);font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:8px}
@@ -175,7 +181,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
 .stash-list-item button:hover{background:var(--btn-hover)}
 .stash-list-item button.pop-btn{color:#86efac;border-color:rgba(34,197,94,.3)}
 .stash-list-item button.drop-btn{color:#fca5a5;border-color:rgba(239,68,68,.3)}
-.stash-empty{text-align:center;color:var(--text5);font-size:.82rem;padding:20px 0}
+.stash-empty{text-align:center;color:var(--hint-text);font-size:.82rem;padding:20px 0}
 
 /* Branch 弹窗 */
 .branch-list-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;background:var(--section);border:1px solid var(--section-border);margin-bottom:8px;font-size:.82rem}
@@ -191,7 +197,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
 .branch-create-input:focus{border-color:var(--input-focus)}
 .branch-create-from{font-size:.78rem;color:var(--text2);margin-bottom:12px}
 .branch-create-from select{padding:8px 12px;border-radius:8px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text);font-size:.82rem;outline:none;width:100%;margin-top:4px}
-.branch-empty{text-align:center;color:var(--text3);font-size:.82rem;padding:20px 0}
+.branch-empty{text-align:center;color:var(--hint-text);font-size:.82rem;padding:20px 0}
 .branch-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--section);border:1px solid var(--section-border);border-radius:8px;margin-bottom:16px}
 .branch-header .branch-current{color:var(--branch-accent);font-weight:700;font-size:.85rem}
 .branch-header .branch-count{color:var(--text2);font-size:.78rem}
@@ -214,6 +220,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
 
 .history-panel{display:none;flex:1;min-height:200px;background:var(--console-bg);border:1px solid var(--console-border);border-radius:14px;flex-direction:column;overflow:hidden}
 .history-panel.active{display:flex}
+.history-panel.fullscreen{position:fixed;inset:0;z-index:200;background:var(--console-bg);border:none;border-radius:0;display:flex}
 .history-list{flex:1;overflow-y:auto;padding:12px 16px}
 .history-list::-webkit-scrollbar{width:5px}
 .history-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
@@ -262,7 +269,9 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
 .console-section.fullscreen .console-output{flex:1;padding:20px;font-size:.85rem}
 
 /* 浮动操作栏 */
-.floating-actions{position:fixed;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:210}
+.floating-actions{position:fixed;right:20px;top:50%;display:flex;flex-direction:column;gap:8px;z-index:210;opacity:0;visibility:hidden;pointer-events:none;transform:translate(16px,-50%);transition:opacity .25s ease,transform .25s ease,visibility 0s linear .25s}
+.floating-actions.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(0,-50%);transition:opacity .25s ease,transform .25s ease,visibility 0s}
+@media(prefers-reduced-motion:reduce){.floating-actions,.floating-actions.show{transition:none}}
 .floating-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--chip-border);background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .floating-btn:hover{transform:scale(1.1);box-shadow:0 6px 16px rgba(0,0,0,.3)}
 .floating-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
@@ -289,7 +298,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     <div class="modal-body" id="addModalBody"></div>
     <div class="modal-footer">
       <button id="addModalCancel">取消</button>
-      <button id="addModalUnstage" style="display:none">取消暂存</button>
+      <button id="addModalUnstage" disabled>取消暂存</button>
       <button class="primary" id="addModalConfirm">加入暂存区</button>
     </div>
   </div>
@@ -319,7 +328,8 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     </div>
     <div class="modal-body">
       <input class="stash-input" id="pushCommitMsg" placeholder="Commit Message (留空使用默认)">
-      <div style="font-size:.75rem;color:var(--text4);margin-top:4px">有变更时自动 commit 并 push，无变更直接 push</div>
+      <div class="modal-hint" style="margin-top:4px">有变更时自动 commit 并 push，无变更直接 push</div>
+      <div id="pushStatusHint" class="modal-hint" style="margin-top:8px">⏳ 检测中...</div>
     </div>
     <div class="modal-footer">
       <button id="pushModalCancel">取消</button>
@@ -424,7 +434,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
 </div>
 
 <!-- 浮动操作栏（全屏时显示） -->
-<div class="floating-actions" id="floatingActions" style="display:none">
+<div class="floating-actions" id="floatingActions">
   <button class="floating-btn status-btn" id="floatingBtnStatus" disabled>📋</button>
   <button class="floating-btn add-btn" id="floatingBtnAdd" disabled>➕</button>
   <button class="floating-btn push-btn" id="floatingBtnPush" disabled>🚀</button>
@@ -464,7 +474,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   // Stash 弹窗
   var stashModal=$("stashModal"),stashModalBody=$("stashModalBody"),stashModalClose=$("stashModalClose"),stashModalClose2=$("stashModalClose2"),stashSaveBtn=$("stashSaveBtn");
   // Push 弹窗
-  var pushModal=$("pushModal"),pushModalClose=$("pushModalClose"),pushModalCancel=$("pushModalCancel"),pushModalConfirm=$("pushModalConfirm"),pushCommitMsg=$("pushCommitMsg");
+  var pushModal=$("pushModal"),pushModalClose=$("pushModalClose"),pushModalCancel=$("pushModalCancel"),pushModalConfirm=$("pushModalConfirm"),pushCommitMsg=$("pushCommitMsg"),pushStatusHint=$("pushStatusHint");
   // Branch 弹窗
   var branchModal=$("branchModal"),branchModalBody=$("branchModalBody"),branchModalClose=$("branchModalClose"),branchModalClose2=$("branchModalClose2");
   
@@ -504,12 +514,12 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     list.forEach(function(h){
       var div=document.createElement("div");div.className="history-item";
       div.innerHTML='<div class="h-time">'+escapeHtml(h.time)+'</div><div class="h-action">'+escapeHtml(h.action)+'</div><div class="h-path">'+escapeHtml(h.path)+'</div>';
-      div.addEventListener("click",function(){pathInput.value=h.path;historyPanel.classList.remove("active");consoleSection.style.display="";});
+      div.addEventListener("click",function(){pathInput.value=h.path;historyPanel.classList.remove("active");historyPanel.classList.remove("fullscreen");consoleSection.style.display="";});
       historyList.appendChild(div);
     });
   }
-  historyBtn.addEventListener("click",function(){renderHistory();consoleSection.style.display="none";historyPanel.classList.add("active");});
-  historyBack.addEventListener("click",function(){historyPanel.classList.remove("active");consoleSection.style.display="";});
+  historyBtn.addEventListener("click",function(){renderHistory();consoleSection.style.display="none";historyPanel.classList.add("active");if(isFullscreen)historyPanel.classList.add("fullscreen");});
+  historyBack.addEventListener("click",function(){historyPanel.classList.remove("active");historyPanel.classList.remove("fullscreen");consoleSection.style.display="";});
   historyClear.addEventListener("click",function(){safeStorage.removeItem(HISTORY_KEY);renderHistory();showToast("历史已清空","info");});
 
   // 折叠切换
@@ -521,12 +531,12 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     isFullscreen=!isFullscreen;
     if(isFullscreen){
       consoleSection.classList.add("fullscreen");
-      floatingActions.style.display="flex";
       syncFloatingButtons();
     }else{
       consoleSection.classList.remove("fullscreen");
-      floatingActions.style.display="none";
+      historyPanel.classList.remove("fullscreen");
     }
+    updateFloatingBar();
   }
   function syncFloatingButtons(){
     floatingBtnStatus.disabled=btnStatus.disabled;
@@ -535,6 +545,15 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     floatingBtnPull.disabled=btnPull.disabled;
     floatingBtnStash.disabled=btnStash.disabled;
     floatingBtnBranch.disabled=btnBranch.disabled;
+  }
+  // 全屏时若弹窗打开则隐藏浮动操作栏，避免与弹窗重叠
+  var modalMasks=[addModal,stashModal,pushModal,branchModal];
+  function updateFloatingBar(){
+    var open=modalMasks.some(function(m){return m.classList.contains("active");});
+    floatingActions.classList.toggle("show",isFullscreen&&!open);
+  }
+  if(window.MutationObserver){
+    new MutationObserver(updateFloatingBar).observe(document.body,{subtree:true,attributes:true,attributeFilter:["class"]});
   }
   consoleFullscreen.addEventListener("click",toggleFullscreen);
   exitFullscreen.addEventListener("click",toggleFullscreen);
@@ -719,8 +738,25 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   btnPush.addEventListener("click",function(){
     if(!currentPath){showToast("请先挂载仓库","error");return;}
     pushCommitMsg.value="";
+    pushStatusHint.textContent="⏳ 检测中...";pushStatusHint.style.color="var(--hint-text)";
     pushModal.classList.add("active");
     pushCommitMsg.focus();
+    apiRequest("POST","/api/git/status",{path:currentPath})
+      .then(function(res){
+        if(!pushModal.classList.contains("active"))return;
+        var ahead=res.ahead||0,hasUp=res.hasUpstream!==false;
+        var dirty=(typeof res.dirty==="boolean")?res.dirty:!!(res.files&&((res.files.modified&&res.files.modified.length)||(res.files.staged&&res.files.staged.length)||(res.files.untracked&&res.files.untracked.length)));
+        var msg,color;
+        if(!hasUp){msg="⚠️ 当前分支未设置远程上游，push 可能失败";color="var(--hint-warn)";}
+        else if(ahead>0&&dirty){msg="⚠️ 本地有 "+ahead+" 个未推送提交，另有未提交改动";color="var(--hint-warn)";}
+        else if(ahead>0){msg="⚠️ 本地有 "+ahead+" 个未推送提交";color="var(--hint-warn)";}
+        else if(dirty){msg="📝 本地有未提交改动，将自动 commit 后推送";color="var(--hint-info)";}
+        else{msg="✅ 本地没有未 push 的内容";color="var(--hint-ok)";}
+        pushStatusHint.textContent=msg;pushStatusHint.style.color=color;
+      })
+      .catch(function(){
+        if(pushModal.classList.contains("active")){pushStatusHint.textContent="⚠️ 检测失败，无法确认是否有未推送内容";pushStatusHint.style.color="var(--hint-warn)";}
+      });
   });
   pushModalClose.addEventListener("click",function(){pushModal.classList.remove("active");});
   pushModalCancel.addEventListener("click",function(){pushModal.classList.remove("active");});
@@ -778,8 +814,11 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     addModalBody.innerHTML=html;
     addModal.classList.add("active");
 
-    // 显示/隐藏取消暂存按钮
-    addModalUnstage.style.display=(files.staged&&files.staged.length)?"":"none";
+    // 按文件分组启用/禁用按钮：无可加入文件禁用「加入暂存区」，无暂存文件禁用「取消暂存」
+    var hasAddable=!!((files.modified&&files.modified.length)||(files.untracked&&files.untracked.length));
+    var hasStaged=!!(files.staged&&files.staged.length);
+    addModalConfirm.disabled=!hasAddable;
+    addModalUnstage.disabled=!hasStaged;
 
     // 已暂存全选
     var stagedSelectAll=addModalBody.querySelector(".staged-select-all");
@@ -793,10 +832,11 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
       });
     }
 
-    // 全选/取消全选
-    addModalBody.querySelectorAll(".select-all").forEach(function(btn){
+    // 全选/取消全选（按分组作用域；已暂存组有独立处理器，排除）
+    addModalBody.querySelectorAll(".select-all:not(.staged-select-all)").forEach(function(btn){
       btn.addEventListener("click",function(){
-        var checkboxes=addModalBody.querySelectorAll("input[type=checkbox]");
+        var group=btn.closest(".file-group");
+        var checkboxes=group?group.querySelectorAll("input[type=checkbox]"):addModalBody.querySelectorAll("input[type=checkbox]");
         var allChecked=true;
         checkboxes.forEach(function(cb){if(!cb.checked)allChecked=false;});
         checkboxes.forEach(function(cb){cb.checked=!allChecked;});
@@ -804,10 +844,11 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
       });
     });
 
-    // 反选
+    // 反选（按分组作用域）
     addModalBody.querySelectorAll(".invert-select").forEach(function(btn){
       btn.addEventListener("click",function(){
-        var checkboxes=addModalBody.querySelectorAll("input[type=checkbox]");
+        var group=btn.closest(".file-group");
+        var checkboxes=group?group.querySelectorAll("input[type=checkbox]"):addModalBody.querySelectorAll("input[type=checkbox]");
         checkboxes.forEach(function(cb){cb.checked=!cb.checked;});
       });
     });
@@ -818,17 +859,19 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   addModalConfirm.addEventListener("click",function(){
     var checked=addModalBody.querySelectorAll("input[type=checkbox]:checked:not(.staged-cb)");
     var files=[];checked.forEach(function(cb){files.push(cb.value);});
-    addModal.classList.remove("active");
     if(!files.length){showToast("未选择文件","error");return;}
-    gitExec("add",{files:files}).then(runGitStatus);
+    gitExec("add",{files:files}).then(runGitStatus).then(refreshAddModal);
   });
   addModalUnstage.addEventListener("click",function(){
     var checked=addModalBody.querySelectorAll(".staged-cb:checked");
     var files=[];checked.forEach(function(cb){files.push(cb.value);});
-    addModal.classList.remove("active");
     if(!files.length){showToast("未选择文件","error");return;}
-    gitExec("reset",{files:files}).then(runGitStatus);
+    gitExec("reset",{files:files}).then(runGitStatus).then(refreshAddModal);
   });
+  // 操作后刷新弹窗内容，弹窗保持打开，仅由用户手动关闭
+  function refreshAddModal(){
+    if(addModal.classList.contains("active")&&lastStatusFiles)showAddModal();
+  }
 
   // Stash
   btnStash.addEventListener("click",function(){
