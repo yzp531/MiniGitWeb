@@ -654,7 +654,6 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
         
         log("❌ 挂载失败: "+errorMsg,"error");
         if(hint)log("💡 "+hint,"info");
-        showToast(errorMsg,"error");
         addHistory("挂载失败",p,errorMsg);
       })
       .then(function(){actionLock=false;setLoading(mountBtn,false);});
