@@ -381,8 +381,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
     <div class="mount-section">
       <div class="section-label" id="mountSectionToggle">📂 仓库目录</div>
       <div class="mount-row">
-        <input type="text" class="path-input" id="pathInput" placeholder="输入 Git 仓库绝对路径" list="pathHistory" autocomplete="off">
-        <datalist id="pathHistory"></datalist>
+        <input type="text" class="path-input" id="pathInput" placeholder="输入 Git 仓库绝对路径" autocomplete="off">
         <button class="mount-btn" id="mountBtn">🔌 挂载</button>
       </div>
       <div class="shortcuts-row" id="shortcutsRow"></div>
@@ -449,7 +448,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   var loginView=$("loginView"),consoleView=$("consoleView");
   var loginForm=$("loginForm"),usernameInput=$("username"),passwordInput=$("password");
   var loginBtn=$("loginBtn"),loginError=$("loginError");
-  var pathInput=$("pathInput"),mountBtn=$("mountBtn"),pathHistoryList=$("pathHistory");
+  var pathInput=$("pathInput"),mountBtn=$("mountBtn");
   var shortcutsRow=$("shortcutsRow"),shortcutsEmpty=$("shortcutsEmpty");
   var branchBadge=$("branchBadge"),logoutBtn=$("logoutBtn");
   var btnStatus=$("btnStatus"),btnAdd=$("btnAdd"),btnPull=$("btnPull"),btnPush=$("btnPush"),btnStash=$("btnStash"),btnBranch=$("btnBranch");
@@ -596,24 +595,18 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
 
   function loadServerHistory(){
     apiRequest("GET","/api/history")
-      .then(function(res){if(res.list){renderShortcuts(res.list);renderPathHistory(res.list);}})
+      .then(function(res){if(res.list){renderShortcuts(res.list);}})
       .catch(function(){});
   }
   function saveServerPath(p){
     apiRequest("POST","/api/history",{path:p})
-      .then(function(res){if(res.list){renderShortcuts(res.list);renderPathHistory(res.list);}})
+      .then(function(res){if(res.list){renderShortcuts(res.list);}})
       .catch(function(){});
   }
   function removeServerPath(p){
     apiRequest("DELETE","/api/history",{path:p})
-      .then(function(res){if(res.list){renderShortcuts(res.list);renderPathHistory(res.list);}})
+      .then(function(res){if(res.list){renderShortcuts(res.list);}})
       .catch(function(){});
-  }
-  function renderPathHistory(list){
-    pathHistoryList.innerHTML="";
-    list.forEach(function(p){
-      var opt=document.createElement("option");opt.value=p;pathHistoryList.appendChild(opt);
-    });
   }
   function renderShortcuts(list){
     shortcutsRow.innerHTML="";
