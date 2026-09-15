@@ -747,7 +747,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
         var ahead=res.ahead||0,hasUp=res.hasUpstream!==false;
         var dirty=(typeof res.dirty==="boolean")?res.dirty:!!(res.files&&((res.files.modified&&res.files.modified.length)||(res.files.staged&&res.files.staged.length)||(res.files.untracked&&res.files.untracked.length)));
         var msg,color;
-        if(!hasUp){msg="⚠️ 当前分支未设置远程上游，push 可能失败";color="var(--hint-warn)";}
+        if(!hasUp){msg="ℹ️ 当前分支无远程上游，push 时将自动创建并建立追踪";color="var(--hint-info)";}
         else if(ahead>0&&dirty){msg="⚠️ 本地有 "+ahead+" 个未推送提交，另有未提交改动";color="var(--hint-warn)";}
         else if(ahead>0){msg="⚠️ 本地有 "+ahead+" 个未推送提交";color="var(--hint-warn)";}
         else if(dirty){msg="📝 本地有未提交改动，将自动 commit 后推送";color="var(--hint-info)";}

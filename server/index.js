@@ -302,8 +302,16 @@ const server = http.createServer(async (req, res) => {
         }
 
         let pushMsg = '', pushOk = true, pushErr = '';
+        const upstream = await gitSafe(['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}']);
+        let pushArgs = ['push'];
+        if (!upstream && branch && branch !== 'HEAD') {
+          const remotes = (await gitSafe(['remote'])).split('\n').filter(Boolean);
+          const remote = (remotes.indexOf('origin') !== -1 || !remotes.length) ? 'origin' : remotes[0];
+          pushArgs = ['push', '-u', remote, branch];
+          output += '--- No upstream ---\n当前分支未设置远程上游，将推送到 ' + remote + '/' + branch + ' 并建立追踪\n\n';
+        }
         try {
-          pushMsg = await gitCmd(['push'], dir, 45000);
+          pushMsg = await gitCmd(pushArgs, dir, 45000);
         } catch(e) { pushOk = false; pushErr = e.message; }
         output += '--- Push Result ---\n' + (pushOk ? (pushMsg || '(done)') : pushErr) + '\n\n';
 
