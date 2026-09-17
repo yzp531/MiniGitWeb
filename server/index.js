@@ -290,10 +290,13 @@ const server = http.createServer(async (req, res) => {
         ensureGit();
         const branch = await gitCmd(['rev-parse', '--abbrev-ref', 'HEAD']);
         const st = await gitCmd(['status', '--porcelain']);
-        const commitMsg = data.message || 'Web Auto Commit';
+        const commitMsg = (data.message || '').trim();
 
         let output = '';
         if (st) {
+          if (!commitMsg) {
+            return respond(200, { success: false, message: '有未提交改动，请填写 Commit Message', output: '--- 已取消 ---\n未填写 commit message，未执行 commit\n\n', branch, pushed: false });
+          }
           await gitCmd(['add', '.']);
           const commitResult = await gitCmd(['commit', '-m', commitMsg]);
           output += '--- Commit ---\n' + commitResult + '\n\n';

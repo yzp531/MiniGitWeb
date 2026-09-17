@@ -327,8 +327,8 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
       <button class="modal-close" id="pushModalClose">✕</button>
     </div>
     <div class="modal-body">
-      <input class="stash-input" id="pushCommitMsg" placeholder="Commit Message (留空使用默认)">
-      <div class="modal-hint" style="margin-top:4px">有变更时自动 commit 并 push，无变更直接 push</div>
+      <input class="stash-input" id="pushCommitMsg" placeholder="Commit Message（有改动时必填）">
+      <div class="modal-hint" style="margin-top:4px">有变更时需填写 commit message 后自动 commit 并 push，无变更直接 push</div>
       <div id="pushStatusHint" class="modal-hint" style="margin-top:8px">⏳ 检测中...</div>
     </div>
     <div class="modal-footer">
@@ -754,6 +754,7 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
         else if(dirty){msg="📝 本地有未提交改动，将自动 commit 后推送";color="var(--hint-info)";}
         else{msg="✅ 本地没有未 push 的内容";color="var(--hint-ok)";}
         pushStatusHint.textContent=msg;pushStatusHint.style.color=color;
+        pushModal.dataset.dirty=dirty?"1":"0";
         pushModalConfirm.disabled=(hasUp&&ahead===0&&!dirty);
       })
       .catch(function(){
@@ -765,8 +766,13 @@ body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text)}
   pushModal.addEventListener("click",function(e){if(e.target===pushModal)pushModal.classList.remove("active");});
   pushModalConfirm.addEventListener("click",function(){
     var msg=pushCommitMsg.value.trim();
+    if(pushModal.dataset.dirty==="1"&&!msg){
+      pushStatusHint.textContent="⚠️ 有未提交改动，请填写 Commit Message";pushStatusHint.style.color="var(--hint-warn)";
+      pushCommitMsg.focus();
+      return;
+    }
     pushModal.classList.remove("active");
-    gitExec("push",{message:msg||"Web Auto Commit"});
+    gitExec("push",{message:msg});
   });
 
   // Add - 文件选择
