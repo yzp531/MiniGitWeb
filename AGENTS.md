@@ -4,7 +4,7 @@
 
 - 所有回答以【Jerry:】开头
 - 使用中文简体回答问题
-- 如果 git push 弹窗为空，默认把最新修改记录（`git log -1 --pretty=%B`）作为 message 推送上去
+- git push 有未提交改动时必须填写 commit message，语义明确（Conventional Commits）；禁止留空或使用「Web Auto Commit」等无意义文案
 
 ## Project Overview
 
